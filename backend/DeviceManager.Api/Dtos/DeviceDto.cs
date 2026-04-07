@@ -4,6 +4,10 @@ namespace DeviceManager.Api.Models;
 
 public class DeviceDto
 {
+  [Required(ErrorMessage = "Serial Number is mandatory")]
+  [StringLength(50)]
+  public string SerialNumber { get; set; } = string.Empty;
+
   [Required(ErrorMessage = "Name is mandatory")]
   public string Name { get; set; } = string.Empty;
 

@@ -1,10 +1,16 @@
 namespace DeviceManager.Api.Models;
 
+using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
+
+[Index(nameof(SerialNumber), IsUnique = true)] // Database-level uniqueness
 public class Device
 {
-  // The Primary Key (matches [Id] in SQL)
+  [Key]
   public int Id { get; set; }
 
+  [Required]
+  public string SerialNumber { get; set; } = string.Empty;
   public string Name { get; set; } = string.Empty;
 
   public string Manufacturer { get; set; } = string.Empty;

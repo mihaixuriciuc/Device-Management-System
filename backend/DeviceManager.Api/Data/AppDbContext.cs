@@ -20,9 +20,9 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Device>(entity =>
         {
             entity.ToTable("Devices");
-            entity.Property(e => e.OperatingSystem).HasColumnName("Operating System");
-            entity.Property(e => e.OsVersion).HasColumnName("OS version");
-            entity.Property(e => e.RamAmount).HasColumnName("RAM amount");
+            entity.Property(e => e.OperatingSystem).HasColumnName("OperatingSystem");
+            entity.Property(e => e.OsVersion).HasColumnName("OSversion");
+            entity.Property(e => e.RamAmount).HasColumnName("RAMamount");
         });
     }
 }

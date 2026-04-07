@@ -1,0 +1,24 @@
+<div class="device-container"> 
+  <!-- Header-->
+  <h2>Device Inventory</h2> 
+  <!-- Table -->
+  <table>
+    <!-- table head- the one that holds the name of the collumns -->
+    <thead>
+      <!-- table row - the one that holds the name of the collumns -->
+      <tr>
+        <!-- collumn names, table header -->
+        <th>Name</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <!-- table body- the one with the data -->
+    <tbody>
+      <tr *ngFor="let device of devices">
+        <!-- data cells-->
+        <td>{{ device.name }}</td>
+        <td>{{ device.status }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

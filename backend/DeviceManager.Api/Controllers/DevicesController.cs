@@ -41,9 +41,18 @@ public class DevicesController : ControllerBase
   [HttpPost]
   public async Task<ActionResult<Device>> PostDevice(DeviceDto deviceDto)
   {
+    // 1. Check for Duplicate Serial Number
+    var duplicate = await _context.Devices
+        .AnyAsync(d => d.SerialNumber.ToUpper() == deviceDto.SerialNumber.ToUpper());
+
+    if (duplicate)
+    {
+      return Conflict(new { message = $"Serial Number {deviceDto.SerialNumber} is already registered." });
+    }
     // You MUST map the DTO to the Model here
     var device = new Device
     {
+      SerialNumber = deviceDto.SerialNumber,
       Name = deviceDto.Name,
       Manufacturer = deviceDto.Manufacturer,
       Type = deviceDto.Type,
@@ -65,17 +74,22 @@ public class DevicesController : ControllerBase
   [HttpPut("{id}")]
   public async Task<IActionResult> PutDevice(int id, DeviceDto deviceDto)
   {
-    // 1. Find the existing device in the database
     var deviceInDb = await _context.Devices.FindAsync(id);
+    if (deviceInDb == null) return NotFound();
 
-    // 2. If it doesn't exist, tell the user
-    if (deviceInDb == null)
+    // 1. Check if the NEW Serial Number is already taken by ANOTHER device
+    // "Find any device that has this serial, but is NOT the one I'm currently editing"
+    bool serialTakenByOthers = await _context.Devices
+        .AnyAsync(d => d.SerialNumber.ToUpper() == deviceDto.SerialNumber.ToUpper()
+                  && d.Id != id);
+
+    if (serialTakenByOthers)
     {
-      return NotFound($"Device with ID {id} not found.");
+      return Conflict($"Serial Number {deviceDto.SerialNumber} is already assigned to a different device.");
     }
 
-    // 3. Map the DTO values to the existing database record
-    // We do NOT touch 'Id' or 'DateAdded' here!
+    // 2. Map the updates
+    deviceInDb.SerialNumber = deviceDto.SerialNumber;
     deviceInDb.Name = deviceDto.Name;
     deviceInDb.Manufacturer = deviceDto.Manufacturer;
     deviceInDb.Type = deviceDto.Type;
@@ -86,18 +100,7 @@ public class DevicesController : ControllerBase
     deviceInDb.Description = deviceDto.Description;
     deviceInDb.Status = deviceDto.Status;
 
-    // 4. Save the changes
-    try
-    {
-      await _context.SaveChangesAsync();
-    }
-    catch (DbUpdateConcurrencyException)
-    {
-      if (!DeviceExists(id)) return NotFound();
-      else throw;
-    }
-
-    // 5. Return 204 No Content (Standard for successful updates)
+    await _context.SaveChangesAsync();
     return NoContent();
   }
 

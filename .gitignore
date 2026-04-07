@@ -1,0 +1,23 @@
+# --- Build Outputs ---
+[Bb]in/
+[Oo]bj/
+
+# --- IDE Folders ---
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# --- .NET specific ---
+project.lock.json
+project.assets.json
+.dotnet/
+
+# --- Operating System Files ---
+.DS_Store
+Thumbs.db
+
+# --- Secrets (CRITICAL) ---
+appsettings.Development.json

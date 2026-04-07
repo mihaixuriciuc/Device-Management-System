@@ -9,12 +9,12 @@ public class Device
 
   public string Manufacturer { get; set; } = string.Empty;
 
-  // You mentioned only 'Phone' or 'Tablet'
+  //only phone or tablet
   public string Type { get; set; } = string.Empty;
 
   public string OperatingSystem { get; set; } = string.Empty;
 
-  public string OSVersion { get; set; } = string.Empty;
+  public string OsVersion { get; set; } = string.Empty;
 
   public string Processor { get; set; } = string.Empty;
 

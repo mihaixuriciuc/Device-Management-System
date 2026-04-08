@@ -1,0 +1,169 @@
+<div class="create-container">
+  <div class="header-actions">
+    <button class="back-link" routerLink="/">← Back to Inventory</button>
+  </div>
+
+  <div class="form-card">
+    <h2>Add New Device</h2>
+    <p class="subtitle">Fill in the specifications for the new hardware.</p>
+
+    <form [formGroup]="deviceForm" (ngSubmit)="onSubmit()">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Device Name*</label>
+          <input formControlName="name" placeholder="e.g. Iphone 6s" />
+          <small
+            class="error-msg"
+            *ngIf="
+              deviceForm.get('name')?.invalid && deviceForm.get('name')?.touched
+            "
+          >
+            Device name is required.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>Serial Number*</label>
+          <input formControlName="serialNumber" placeholder="SN-882910" />
+          <small
+            class="error-msg"
+            *ngIf="
+              deviceForm.get('serialNumber')?.invalid &&
+              deviceForm.get('serialNumber')?.touched
+            "
+          >
+            A unique serial number is required (max 50 chars).
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>Manufacturer*</label>
+          <input formControlName="manufacturer" placeholder="e.g. Apple" />
+          <small
+            class="error-msg"
+            *ngIf="
+              deviceForm.get('manufacturer')?.invalid &&
+              deviceForm.get('manufacturer')?.touched
+            "
+          >
+            Manufacturer is required.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>Type*</label>
+          <select formControlName="type">
+            <option value="Phone">Phone</option>
+            <option value="Tablet">Tablet</option>
+          </select>
+          <small
+            class="error-msg"
+            *ngIf="
+              deviceForm.get('type')?.invalid && deviceForm.get('type')?.touched
+            "
+          >
+            Please select a device type.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>Operating System*</label>
+          <input
+            formControlName="operatingSystem"
+            [class.invalid-input]="
+              deviceForm.get('operatingSystem')?.invalid &&
+              deviceForm.get('operatingSystem')?.dirty
+            "
+            placeholder="e.g. Android"
+          />
+
+          <small
+            class="error-msg"
+            *ngIf="
+              deviceForm.get('operatingSystem')?.invalid &&
+              deviceForm.get('operatingSystem')?.touched
+            "
+          >
+            Operating System is required
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>OS Version*</label>
+          <input formControlName="osVersion" placeholder="e.g. 14.0" />
+          <small
+            class="error-msg"
+            *ngIf="
+              deviceForm.get('osVersion')?.invalid &&
+              deviceForm.get('osVersion')?.touched
+            "
+          >
+            Version is required.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>Processor*</label>
+          <input formControlName="processor" placeholder="e.g. Snapdragon G3" />
+          <small
+            class="error-msg"
+            *ngIf="
+              deviceForm.get('processor')?.invalid &&
+              deviceForm.get('processor')?.touched
+            "
+          >
+            Processor info is required.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>RAM Amount*</label>
+          <div class="input-wrapper">
+            <input formControlName="ramAmount" placeholder="e.g. 16" />
+            <span class="suffix">GB</span>
+          </div>
+          <small
+            class="error-msg"
+            *ngIf="
+              deviceForm.get('ramAmount')?.invalid &&
+              deviceForm.get('ramAmount')?.dirty
+            "
+          >
+            Enter a number between 1 and 512.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>Status*</label>
+          <select formControlName="status">
+            <option value="Available">Available</option>
+            <option value="Unavailable">Unavailable</option>
+            <option value="In Service">In Service</option>
+            <option value="Retired">Retired</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group full-width">
+        <label>Description*</label>
+        <textarea formControlName="description" rows="3"></textarea>
+        <small
+          class="error-msg"
+          *ngIf="
+            deviceForm.get('description')?.invalid &&
+            deviceForm.get('description')?.touched
+          "
+        >
+          Please provide a short description.
+        </small>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="cancel-btn" routerLink="/">Cancel</button>
+        <button type="submit" [disabled]="!deviceForm.valid" class="submit-btn">
+          Save Device
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

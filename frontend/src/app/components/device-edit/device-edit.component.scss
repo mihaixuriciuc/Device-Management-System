@@ -1,0 +1,204 @@
+.create-container {
+  padding: 40px;
+  max-width: 900px;
+  margin: 0 auto;
+
+  .header-actions {
+    margin-bottom: 20px;
+
+    .back-link {
+      background: none;
+      border: none;
+      color: #4a5568;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: color 0.2s;
+      padding: 0;
+
+      &:hover {
+        color: #2b6cb0;
+      }
+    }
+  }
+
+  .form-card {
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+
+    h2 {
+      margin: 0;
+      font-size: 2rem;
+      color: #1a202c;
+    }
+
+    .subtitle {
+      margin: 8px 0 30px;
+      color: #718096;
+      font-size: 1.1rem;
+
+      strong {
+        color: #2d3748;
+      }
+    }
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); // Keeps your 3-column layout
+    gap: 25px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+
+    &.full-width {
+      grid-column: 1 / -1; // Spans all columns for the description
+      margin-top: 10px;
+    }
+
+    label {
+      font-size: 0.85rem;
+      color: #4a5568;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    input,
+    select,
+    textarea {
+      padding: 12px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 1rem;
+      color: #2d3748;
+      background-color: #f7fafc;
+      transition: all 0.2s ease;
+      font-family: inherit;
+
+      &:focus {
+        outline: none;
+        border-color: #3182ce;
+        background-color: white;
+        box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.15);
+      }
+
+      // 1. Your manual invalid class (if you keep [class.invalid-input] in HTML)
+      &.invalid-input {
+        border-color: #e53e3e;
+        background-color: #fff5f5;
+        &:focus {
+          box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.15);
+        }
+      }
+
+      // 2. NEW: Angular's automatic empty/invalid tracking!
+      // This turns the box red if it is required but empty,
+      // ONLY after the user has interacted with it (touched).
+      &.ng-invalid.ng-touched {
+        border-color: #e53e3e; // Red border
+        background-color: #fff5f5; // Very faint red background
+
+        &:focus {
+          box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.15); // Red glow instead of blue
+        }
+      }
+    }
+
+    textarea {
+      resize: vertical; // Only allow vertical resizing
+    }
+
+    // Handles the "GB" text inside the RAM input box
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+
+      input {
+        width: 100%;
+        padding-right: 45px; // Make room for the suffix
+      }
+
+      .suffix {
+        position: absolute;
+        right: 15px;
+        color: #a0aec0;
+        font-weight: 700;
+        pointer-events: none; // Allows clicking "through" the text to focus the input
+      }
+    }
+
+    // Validation error text
+    .error-msg {
+      color: #e53e3e;
+      font-size: 0.75rem;
+      margin-top: 6px;
+      font-weight: 600;
+    }
+  }
+
+  // Footer Buttons
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 15px;
+    margin-top: 40px;
+    border-top: 1px solid #edf2f7;
+    padding-top: 25px;
+
+    .cancel-btn {
+      background: transparent;
+      border: 1px solid #e2e8f0;
+      color: #4a5568;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none; // In case it renders as an anchor tag
+
+      &:hover {
+        background: #f7fafc;
+        border-color: #cbd5e0;
+        color: #2d3748;
+      }
+    }
+
+    .submit-btn {
+      background-color: #3182ce;
+      color: white;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 6px rgba(49, 130, 206, 0.1);
+
+      &:hover:not(:disabled) {
+        background-color: #2b6cb0;
+        transform: translateY(-2px); // Consistent lift animation
+        box-shadow: 0 6px 12px rgba(49, 130, 206, 0.2);
+      }
+
+      &:disabled {
+        background-color: #a0aec0;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+    }
+  }
+}
+
+// Responsive break for smaller screens
+@media (max-width: 768px) {
+  .create-container .form-grid {
+    grid-template-columns: 1fr; // Stack fields on mobile
+  }
+}

@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using DeviceManager.Api.Data;
+using DeviceManager.Api.Services;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers(); // THIS IS CRUCIAL - It tells the app to look for your Controllers folder
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 
 // 2. Connect to the Database (using the name from appsettings.json)
 builder.Services.AddControllers(options =>
@@ -16,6 +19,7 @@ builder.Services.AddControllers(options =>
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 
 // 2. THIS WAS MISSING: Connect to the Database
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -29,7 +33,7 @@ builder.Services.AddCors(options =>
                         .AllowAnyHeader()
                         .AllowAnyMethod());
 });
-
+builder.Services.AddScoped<DeviceServiceInterface, DeviceService>();
 var app = builder.Build();
 
 app.UseCors("AllowAngularApp");

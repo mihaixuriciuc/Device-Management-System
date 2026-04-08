@@ -1,0 +1,160 @@
+.device-container {
+  padding: 40px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+  h2 {
+    color: #2c3e50;
+    margin-bottom: 24px;
+    font-weight: 600;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    border-radius: 12px;
+    overflow: hidden; // Keeps the corners rounded
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05); // Soft shadow
+  }
+
+  thead {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #edf2f7;
+
+    th {
+      padding: 16px;
+      text-align: left;
+      color: #718096;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid #edf2f7;
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background-color: #f7fafc; // Subtle hover effect
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    td {
+      padding: 16px;
+      color: #2d3748;
+      vertical-align: middle;
+
+      a {
+        color: #3182ce;
+        text-decoration: none;
+        font-weight: 500;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+    // Add this inside your existing .device-container logic
+  .status-pill {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+
+    &[data-status="Active"] {
+      background-color: #c6f6d5;
+      color: #22543d;
+    }
+
+    &[data-status="Maintenance"] {
+      background-color: #feebc8;
+      color: #744210;
+    }
+
+    &[data-status="Retired"] {
+      background-color: #fed7d7;
+      color: #822727;
+    }
+  }
+  .clickable-row {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-left: 4px solid transparent; // Hidden "accent" bar
+
+  &:hover {
+    background-color: #f7fafc; // Subtle highlight
+    transform: scale(1.005); // Very tiny "pop" effect
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-left: 4px solid lab(80.14% -0.8 -10.46); // Shows your fancy color!
+  }
+
+  &:active {
+    background-color: #edf2f7;
+    transform: scale(1); // Settles back down when clicked
+
+  }
+  .delete-btn {
+    opacity: 0; // Hidden by default
+    transition: opacity 0.2s ease;
+    background-color: #fff5f5;
+    color: #c53030;
+    border: 1px solid #feb2b2;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+
+    &:hover {
+      background-color: #c53030;
+      color: white;
+    }
+  }
+
+  // When the ROW is hovered, show the BUTTON
+  &:hover .delete-btn {
+    opacity: 1;
+  }
+}
+
+.action-cell {
+  width: 80px;
+  text-align: right;
+  padding-right: 20px;
+}
+.list-header {
+  display: flex;             // Turns on the Flexbox engine
+  justify-content: space-between; // Pushes Title to left, Button to right
+  align-items: center;       // Vertically centers them so they line up perfectly
+  margin-bottom: 24px;       // Adds some breathing room above the table
+  width: 100%;               // Ensures it takes up the full width of the container
+}
+
+.create-btn {
+  background-color: #3182ce; // A nice "Primary" blue
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #2b6cb0;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(49, 130, 206, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+  
+}

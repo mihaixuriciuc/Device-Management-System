@@ -1,23 +1,37 @@
-<div class="device-container"> 
-  <!-- Header-->
-  <h2>Device Inventory</h2> 
-  <!-- Table -->
+<div class="device-container">
+  <div class="list-header">
+    <h2>Device Inventory</h2>
+      <button class="create-btn" routerLink="/devices/new">
+      + Add New Device
+    </button>
+  </div>
+
   <table>
-    <!-- table head- the one that holds the name of the collumns -->
     <thead>
-      <!-- table row - the one that holds the name of the collumns -->
       <tr>
-        <!-- collumn names, table header -->
-        <th>Name</th>
+        <th>Device Name</th>
+        <th>Manufacturer</th> 
+        <th>Type</th>         
         <th>Status</th>
+        <th>User</th>
+        <th></th>
       </tr>
     </thead>
-    <!-- table body- the one with the data -->
     <tbody>
-      <tr *ngFor="let device of devices">
-        <!-- data cells-->
+      <tr *ngFor="let device of devices" 
+          (click)="goToDetails(device.id)" 
+          class="clickable-row">
+          
         <td>{{ device.name }}</td>
+        <td>{{ device.manufacturer }}</td>
+        <td>{{ device.type }}</td>
         <td>{{ device.status }}</td>
+        <td>User {{device.id}}</td>
+        <td class="action-cell">
+          <button class="delete-btn" (click)="deleteDevice($event, device.id)">
+            Delete
+         </button>
+        </td>
       </tr>
     </tbody>
   </table>

@@ -71,9 +71,27 @@ $text-dark: #2d3748;
     padding: 12px;
     border: 1px solid $border-color;
     border-radius: 6px;
+    background-color: white; // Added base background for consistency
+    transition: all 0.2s ease; // Added smooth transition
+
     &:focus {
       outline: none;
       border-color: $primary-blue;
+      box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.15); // Added a subtle blue glow on focus
+    }
+
+    // NEW: Angular's automatic empty/invalid tracking!
+    // This turns the box red if it is required but empty,
+    // ONLY after the user has interacted with it (touched) or typed and deleted (dirty).
+    &.ng-invalid.ng-touched,
+    &.ng-invalid.ng-dirty {
+      border-color: $error-red;
+      background-color: #fff5f5; // Very subtle red background tint
+
+      &:focus {
+        // Changes the focus glow to red if the field is still invalid
+        box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.15);
+      }
     }
   }
 
@@ -90,6 +108,7 @@ $text-dark: #2d3748;
       right: 12px;
       color: #cbd5e0;
       font-weight: bold;
+      pointer-events: none; // Ensures clicking the "GB" focuses the input behind it
     }
   }
 
@@ -112,15 +131,24 @@ $text-dark: #2d3748;
     border-radius: 6px;
     font-weight: 600;
     cursor: pointer;
+    transition: all 0.2s ease; // Added transition for hover states
   }
   .cancel-btn {
     background: white;
     border: 1px solid $border-color;
+    &:hover {
+      background: #f7fafc;
+    }
   }
   .submit-btn {
     background: $primary-blue;
     color: white;
     border: none;
+
+    &:hover:not(:disabled) {
+      background: darken(#3182ce, 10%); // Slightly darkens the blue on hover
+    }
+
     &:disabled {
       background: #cbd5e0;
       cursor: not-allowed;

@@ -1,11 +1,16 @@
-<div class="create-container">
+<div class="create-container" *ngIf="device">
   <div class="header-actions">
-    <button class="back-link" routerLink="/">← Back to Inventory</button>
+    <button class="back-link" [routerLink]="['/devices', device.id]">
+      ← Back to Details
+    </button>
   </div>
 
   <div class="form-card">
-    <h2>Add New Device</h2>
-    <p class="subtitle">Fill in the specifications for the new hardware.</p>
+    <h2>Edit Device</h2>
+    <p class="subtitle">
+      Modify the specifications for <strong>{{ device.name }}</strong
+      >.
+    </p>
 
     <form [formGroup]="deviceForm" (ngSubmit)="onSubmit()">
       <div class="form-grid">
@@ -21,6 +26,7 @@
             Device name is required.
           </small>
         </div>
+
         <div class="form-group">
           <label>Serial Number*</label>
           <input formControlName="serialNumber" placeholder="SN-882910" />
@@ -42,7 +48,7 @@
               deviceForm.get('serialNumber')?.touched
             "
           >
-            This serial number is already registered to another device!
+            This serial number is already in use by another device!
           </small>
 
           <small
@@ -52,7 +58,6 @@
             Cannot verify serial number. Is the server running?
           </small>
         </div>
-
         <div class="form-group">
           <label>Manufacturer*</label>
           <input formControlName="manufacturer" placeholder="e.g. Apple" />
@@ -93,7 +98,6 @@
             "
             placeholder="e.g. Android"
           />
-
           <small
             class="error-msg"
             *ngIf="
@@ -176,14 +180,20 @@
       </div>
 
       <div class="form-actions">
-        <button type="button" class="cancel-btn" routerLink="/">Cancel</button>
+        <button
+          type="button"
+          class="cancel-btn"
+          [routerLink]="['/devices', device.id]"
+        >
+          Cancel
+        </button>
 
         <button
           type="submit"
           [disabled]="deviceForm.invalid || deviceForm.pending"
           class="submit-btn"
         >
-          Save Device
+          Save Changes
         </button>
       </div>
     </form>

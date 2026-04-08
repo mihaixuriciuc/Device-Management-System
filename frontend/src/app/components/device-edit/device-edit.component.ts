@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ReactiveFormsModule,
@@ -9,23 +9,31 @@ import {
   AsyncValidatorFn,
   ValidationErrors,
 } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { DeviceService } from '../../services/device.service';
+import { Device } from '../../models/device.model';
 import { Observable, of, timer } from 'rxjs';
 import { map, catchError, switchMap } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-device-create',
+  selector: 'app-device-edit',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterModule],
-  templateUrl: './device-create.component.html',
-  styleUrl: './device-create.component.scss',
+  templateUrl: './device-edit.component.html',
+  styleUrl: './device-edit.component.scss',
 })
-export class DeviceCreateComponent {
+export class DeviceEditComponent implements OnInit {
+  device: Device | undefined;
+  deviceId!: number;
+
+  // NEW: We need to remember the original serial number so we don't validate against it
+  originalSerialNumber: string = '';
+
   deviceForm = new FormGroup({
+    id: new FormControl<number | null>(null),
     name: new FormControl('', [Validators.required]),
 
-    // Serial Number mapped with explicit validators
+    // Upgraded Serial Number Control (Identical to Create)
     serialNumber: new FormControl('', {
       validators: [Validators.required],
       asyncValidators: [this.uniqueSerialValidator()],
@@ -46,13 +54,30 @@ export class DeviceCreateComponent {
   });
 
   constructor(
+    private route: ActivatedRoute,
     private deviceService: DeviceService,
     private router: Router,
   ) {}
 
+  ngOnInit(): void {
+    this.deviceId = Number(this.route.snapshot.paramMap.get('id'));
+
+    if (this.deviceId) {
+      this.deviceService.getDeviceById(this.deviceId).subscribe({
+        next: (data) => {
+          this.device = data;
+          // NEW: Save the original serial number before patching the form
+          this.originalSerialNumber = data.serialNumber;
+          this.deviceForm.patchValue(data);
+        },
+        error: (err) => console.error('Error fetching device:', err),
+      });
+    }
+  }
+
   onSubmit() {
-    // Extra safety check: Don't submit if it's pending a server response
-    if (this.deviceForm.valid && !this.deviceForm.pending) {
+    // Upgraded Save guard: Must be valid AND not waiting on C#
+    if (this.deviceForm.valid && !this.deviceForm.pending && this.deviceId) {
       const rawData = this.deviceForm.value;
 
       let ramValue = rawData.ramAmount?.toString().trim() || '';
@@ -61,18 +86,23 @@ export class DeviceCreateComponent {
         ramValue = `${numericPart[0]}GB`;
       }
 
-      const deviceToSave = {
+      const deviceToUpdate = {
         ...rawData,
         ramAmount: ramValue,
       };
 
-      this.deviceService.createDevice(deviceToSave).subscribe({
+      this.deviceService.updateDevice(this.deviceId, deviceToUpdate).subscribe({
         next: () => {
-          alert('Device Created Successfully!');
-          this.router.navigate(['/']);
+          alert('Device Updated Successfully!');
+          this.router.navigate(['/devices', this.deviceId]);
         },
         error: (err) => {
-          alert('Failed to save. Check console.');
+          if (err.status === 400 || err.status === 409) {
+            const message = err.error?.message || 'Check validation rules.';
+            alert('Backend Error: ' + message);
+          } else {
+            alert('Server error. Check console.');
+          }
           console.error('Error detail:', err);
         },
       });
@@ -80,11 +110,18 @@ export class DeviceCreateComponent {
   }
 
   // ==========================================
-  // Custom Async Validator
+  // Smart Async Validator for Editing
   // ==========================================
   uniqueSerialValidator(): AsyncValidatorFn {
     return (control: AbstractControl): Observable<ValidationErrors | null> => {
-      if (!control.value) {
+      if (!control.value) return of(null);
+
+      // CRITICAL EDIT LOGIC: If the user hasn't changed the serial number from what
+      // it originally was, we immediately say "It's Valid!" without asking the backend.
+      if (
+        this.originalSerialNumber &&
+        control.value.toUpperCase() === this.originalSerialNumber.toUpperCase()
+      ) {
         return of(null);
       }
 
@@ -93,18 +130,10 @@ export class DeviceCreateComponent {
           this.deviceService.checkSerialNumberExists(control.value),
         ),
         map((exists) => {
-          console.log(`Backend check for ${control.value}: Exists =`, exists);
-          // Return the error state if it exists
           return exists ? { serialTaken: true } : null;
         }),
-        catchError((err) => {
-          console.error(
-            'API validation failed (probably CORS or Server Offline):',
-            err,
-          );
-          // CRITICAL FIX: If the API fails, return an error so the form becomes INVALID
-          // and locks the submit button, instead of assuming it's fine.
-          return of({ apiError: true });
+        catchError(() => {
+          return of({ apiError: true }); // Lock form if C# is unreachable
         }),
       );
     };

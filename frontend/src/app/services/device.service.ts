@@ -32,4 +32,11 @@ export class DeviceService {
   updateDevice(id: number, device: any) {
     return this.http.put(`${this.apiUrl}/${id}`, device);
   }
+
+  // 6. Check if Serial Number exists (For Async Validation)
+  checkSerialNumberExists(serialNumber: string): Observable<boolean> {
+    return this.http.get<boolean>(
+      `${this.apiUrl}/check-serial?sn=${serialNumber}`,
+    );
+  }
 }

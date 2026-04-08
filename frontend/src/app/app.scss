@@ -1,0 +1,56 @@
+// Reuse the same professional color palette
+$primary-blue: #3182ce;
+$bg-gray: #f7fafc;
+$text-dark: #2d3748;
+$border-color: #e2e8f0;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; // Forces footer to the bottom
+  background-color: $bg-gray;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+header {
+  background-color: white;
+  border-bottom: 1px solid $border-color;
+  padding: 1.5rem 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+
+  h1 {
+    max-width: 900px;
+    margin-left: 0 auto;
+    padding: 0 20px;
+    color: $text-dark;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    text-align: left;
+
+    // Optional: Add a small blue accent bar next to the title
+    border-left: 4px solid $primary-blue;
+  }
+}
+
+main {
+  flex: 1; // This pushes the footer down if the content is short
+  padding: 20px 0;
+  // This ensures the router-outlet content is centered
+}
+
+footer {
+  background-color: white;
+  border-top: 1px solid $border-color;
+  padding: 1.5rem 0;
+  margin-top: 40px;
+
+  p {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px;
+    color: #a0aec0;
+    font-size: 0.85rem;
+    text-align: center;
+  }
+}

@@ -1,20 +1,24 @@
 <div class="detail-container" *ngIf="device">
-
-  
-    
-  
-  
-
   <div class="card">
     <div class="header">
       <div>
         <h1>{{ device.name }}</h1>
         <p class="subtitle">{{ device.manufacturer }} | {{ device.type }}</p>
       </div>
-      <span class="status-badge">{{ device.status }}</span>
+
+      <div class="header-right">
+        <span class="status-badge">{{ device.status }}</span>
+
+        <button
+          class="update-btn"
+          [routerLink]="['/devices', device.id, 'edit']"
+        >
+          Update Device
+        </button>
+      </div>
     </div>
-    
-    <hr>
+
+    <hr />
 
     <div class="specs-section">
       <h3><i class="icon"></i> Hardware</h3>
@@ -29,7 +33,9 @@
         </div>
         <div class="spec-item">
           <label>Serial Number</label>
-          <p><code>{{ device.serialNumber }}</code></p>
+          <p>
+            <code>{{ device.serialNumber }}</code>
+          </p>
         </div>
       </div>
     </div>
@@ -43,7 +49,7 @@
         </div>
         <div class="spec-item">
           <label>Date Added</label>
-          <p>{{ device.dateAdded | date:'mediumDate' }}</p>
+          <p>{{ device.dateAdded | date: "mediumDate" }}</p>
         </div>
       </div>
     </div>
@@ -52,7 +58,7 @@
       <h3><i class="icon"></i> Description</h3>
       <p class="description-text">{{ device.description }}</p>
     </div>
-    
   </div>
+
   <button class="back-link" routerLink="/">← Back to Inventory</button>
 </div>

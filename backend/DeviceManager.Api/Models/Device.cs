@@ -1,6 +1,7 @@
 namespace DeviceManager.Api.Models;
 
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
 [Index(nameof(SerialNumber), IsUnique = true)] // Database-level uniqueness
@@ -31,4 +32,9 @@ public class Device
   public string Status { get; set; } = "Available";
 
   public DateTime DateAdded { get; set; } = DateTime.UtcNow;
+
+public string? AssignedUserId { get; set; }
+
+[ForeignKey("AssignedUserId")]
+public virtual ApplicationUser? AssignedUser { get; set; } // Must have 'virtual'!
 }

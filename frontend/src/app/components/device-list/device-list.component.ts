@@ -1,54 +1,97 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common'; // Needed for loops in HTML
+import { CommonModule } from '@angular/common';
 import { DeviceService } from '../../services/device.service';
 import { Device } from '../../models/device.model';
-import { RouterLink, RouterModule, RouterOutlet } from '@angular/router';
-import { Router } from '@angular/router';
-
+import { RouterLink, RouterModule, Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service'; // 1. Import the Auth Service
 
 @Component({
   selector: 'app-device-list',
   standalone: true,
-  imports: [CommonModule,RouterLink], // Tells Angular "I want to use *ngFor"
+  imports: [CommonModule, RouterLink, RouterModule],
   templateUrl: './device-list.component.html',
-  styleUrl: './device-list.component.scss'
+  styleUrl: './device-list.component.scss',
 })
 export class DeviceListComponent implements OnInit {
-  devices: Device[] = []; // This is our "Storage Bin" for the data
+  devices: Device[] = [];
 
-  constructor(private deviceService: DeviceService,
-    private router: Router ) {}
+  constructor(
+    private deviceService: DeviceService,
+    private router: Router,
+    public authService: AuthService, // 2. Inject it as 'public' so HTML can read it
+  ) {}
 
   ngOnInit(): void {
-    // 1. Call the service
+    // Call the helper function to load data
+    this.loadDevices();
+  }
+
+  // Helper function to fetch devices so we can easily refresh the list later
+  loadDevices(): void {
     this.deviceService.getDevices().subscribe({
       next: (data) => {
-        this.devices = data; // 2. Put the data in the bin
+        this.devices = data;
       },
-      error: (err) => console.error('API Error:', err)
+      error: (err) => console.error('API Error:', err),
     });
   }
 
-  // 3. The function that handles the click
   goToDetails(id: number): void {
     this.router.navigate(['/devices', id]);
   }
 
-deleteDevice(event: Event, id: number): void {
-  event.stopPropagation(); // Prevents navigating to details
-  
-  if (confirm('Are you sure you want to delete this device?')) {
-    this.deviceService.deleteDevice(id).subscribe({
+  // ==========================================
+  // ADMIN ACTIONS
+  // ==========================================
+
+  deleteDevice(event: Event, id: number): void {
+    event.stopPropagation();
+
+    if (confirm('Are you sure you want to delete this device?')) {
+      this.deviceService.deleteDevice(id).subscribe({
+        next: () => {
+          this.devices = this.devices.filter((d) => d.id !== id);
+          console.log(`Device ${id} deleted successfully`);
+        },
+        error: (err) => {
+          console.error('Delete failed:', err);
+          alert('Could not delete the device. Is the backend running?');
+        },
+      });
+    }
+  }
+
+  // ==========================================
+  // REGULAR USER ACTIONS
+  // ==========================================
+
+  assignToMe(event: Event, id: number): void {
+    event.stopPropagation();
+
+    this.deviceService.assignDevice(id).subscribe({
       next: () => {
-        // Success! Remove the device from the local list so the UI updates
-        this.devices = this.devices.filter(d => d.id !== id);
-        console.log(`Device ${id} deleted successfully`);
+        console.log(`Device ${id} assigned successfully`);
+        this.loadDevices(); // Refresh the list so the UI shows it as assigned!
       },
       error: (err) => {
-        console.error('Delete failed:', err);
-        alert('Could not delete the device. Is the backend running?');
-      }
+        console.error('Assign failed:', err);
+        alert('Could not assign the device.');
+      },
     });
   }
-}
+
+  unassign(event: Event, id: number): void {
+    event.stopPropagation();
+
+    this.deviceService.unassignDevice(id).subscribe({
+      next: () => {
+        console.log(`Device ${id} unassigned successfully`);
+        this.loadDevices(); // Refresh the list so the UI shows it as available!
+      },
+      error: (err) => {
+        console.error('Unassign failed:', err);
+        alert('Could not unassign the device.');
+      },
+    });
+  }
 }

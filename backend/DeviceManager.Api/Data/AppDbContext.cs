@@ -1,22 +1,25 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore; 
 using Microsoft.EntityFrameworkCore;
 using DeviceManager.Api.Models;
 
 namespace DeviceManager.Api.Data;
 
-public class AppDbContext : DbContext
+public class AppDbContext : IdentityDbContext<ApplicationUser>
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
     }
 
-    // This property connects your C# 'Device' class to the SQL table
+   
     public DbSet<Device> Devices { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // CRITICAL: This base call configures all the security tables (AspNetUsers, etc.)
+        // It MUST stay right here before your custom configurations.
         base.OnModelCreating(modelBuilder);
 
-        // This maps the C# properties to your specific SQL column names
+        // Your existing custom mappings stay exactly as they were!
         modelBuilder.Entity<Device>(entity =>
         {
             entity.ToTable("Devices");

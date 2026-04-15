@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { DeviceService } from '../../services/device.service';
 import { Device } from '../../models/device.model';
+import { AuthService } from '../../services/auth.service'; // 1. Import this
 
 @Component({
   selector: 'app-device-detail',
@@ -16,8 +17,9 @@ export class DeviceDetailComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router, // Added Router for navigation logic
+    private router: Router,
     private deviceService: DeviceService,
+    public authService: AuthService, // 2. Inject it as public
   ) {}
 
   ngOnInit(): void {

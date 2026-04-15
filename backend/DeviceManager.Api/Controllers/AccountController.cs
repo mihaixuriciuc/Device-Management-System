@@ -5,7 +5,7 @@ using DeviceManager.Api.DTOs;
 namespace DeviceManager.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/account")]
 public class AccountController : ControllerBase
 {
     private readonly AuthServiceInterface _authService;
@@ -57,5 +57,15 @@ public class AccountController : ControllerBase
 
         SetTokenCookies(newAccessToken!, newRefreshToken!);
         return Ok(result);
+    }
+
+    [HttpPost("logout")]
+    public IActionResult Logout()
+    {
+        // This tells the browser to instantly expire and delete the secure cookies
+        Response.Cookies.Delete("AccessToken");
+        Response.Cookies.Delete("RefreshToken");
+        
+        return Ok(new { message = "Logged out successfully" });
     }
 }

@@ -6,13 +6,20 @@ using Microsoft.IdentityModel.Tokens;
 using DeviceManager.Api.Data;
 using DeviceManager.Api.Models;
 using DeviceManager.Api.Services;
+using System.Text.Json.Serialization;
 
 
 
 var builder = WebApplication.CreateBuilder(args);
 
 // --- 1. CORE SERVICES ---
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // This stops the "Null" issue caused by circular references
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.WriteIndented = true; 
+    });
 
 
 // --- 2. DATABASE & IDENTITY ---
@@ -127,6 +134,20 @@ using (var scope = app.Services.CreateScope())
         {
             // 3. Attach the Admin role to this user
             await userManager.AddToRoleAsync(adminUser, "Admin");
+        }
+    }
+}
+
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var roles = new[] { "Admin", "User" };
+
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+        {
+            await roleManager.CreateAsync(new IdentityRole(role));
         }
     }
 }

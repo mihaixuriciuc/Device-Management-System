@@ -26,7 +26,7 @@ public class AuthService : AuthServiceInterface
     {
         var userExists = await _userManager.FindByEmailAsync(model.Email);
         if (userExists != null) 
-            return (new AuthResponseDto(false, "User already exists."), null, null);
+            return (new AuthResponseDto(false, "User already exists.",null), null, null);
 
         var user = new ApplicationUser
         {
@@ -39,7 +39,9 @@ public class AuthService : AuthServiceInterface
         var result = await _userManager.CreateAsync(user, model.Password);
         
         if (!result.Succeeded) 
-            return (new AuthResponseDto(false, "Registration failed."), null, null);
+            return (new AuthResponseDto(false, "Registration failed.", null), null, null);
+
+        
 
         // Generate tokens for automatic login
         // NOTE: GenerateJwtToken is now awaited!
@@ -49,9 +51,14 @@ public class AuthService : AuthServiceInterface
         // Save the refresh token to the database
         user.RefreshToken = refreshToken;
         user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
-        await _userManager.UpdateAsync(user);
 
-        return (new AuthResponseDto(true, "Registration and Login successful!"), accessToken, refreshToken);
+        await _userManager.AddToRoleAsync(user, "User");
+        // --- THE FIX: GET THE ROLE AND SEND IT TO ANGULAR ---
+        var roles = await _userManager.GetRolesAsync(user);
+        var userRole = roles.FirstOrDefault() ?? "User"; // This grabs "Admin" or "User"
+
+
+        return (new AuthResponseDto(true, "Registration and Login successful!", userRole), accessToken, refreshToken);
     }
 
     // --- 2. LOGIN ---
@@ -60,7 +67,7 @@ public class AuthService : AuthServiceInterface
         var user = await _userManager.FindByEmailAsync(model.Email);
         
         if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
-            return (new AuthResponseDto(false, "Invalid credentials."), null, null);
+            return (new AuthResponseDto(false, "Invalid credentials.", null), null, null);
 
         // Generate fresh tokens
         // NOTE: GenerateJwtToken is now awaited!
@@ -72,7 +79,11 @@ public class AuthService : AuthServiceInterface
         user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
         await _userManager.UpdateAsync(user);
 
-        return (new AuthResponseDto(true, "Login successful."), accessToken, refreshToken);
+        // --- THE FIX: GET THE ROLE AND SEND IT TO ANGULAR ---
+        var roles = await _userManager.GetRolesAsync(user);
+        var userRole = roles.FirstOrDefault(); // This grabs "Admin" or "User"
+
+        return (new AuthResponseDto(true, "Login successful.",userRole), accessToken, refreshToken);
     }
 
     // --- 3. REFRESH TOKEN ROTATION ---
@@ -82,7 +93,7 @@ public class AuthService : AuthServiceInterface
 
         // If no user matches the token, or it expired, force a fresh login
         if (user == null || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
-            return (new AuthResponseDto(false, "Invalid or expired token. Please log in again."), null, null);
+            return (new AuthResponseDto(false, "Invalid or expired token. Please log in again.", null), null, null);
 
         // Generate replacement tokens
         // NOTE: GenerateJwtToken is now awaited!
@@ -94,7 +105,11 @@ public class AuthService : AuthServiceInterface
         user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7); 
         await _userManager.UpdateAsync(user);
 
-        return (new AuthResponseDto(true, "Tokens rotated successfully."), newAccessToken, newRefreshToken);
+        // --- THE FIX: GET THE ROLE AND SEND IT TO ANGULAR ---
+        var roles = await _userManager.GetRolesAsync(user);
+        var userRole = roles.FirstOrDefault(); // This grabs "Admin" or "User"
+
+        return (new AuthResponseDto(true, "Tokens rotated successfully.", userRole), newAccessToken, newRefreshToken);
     }
 
     // --- HELPER: GENERATE JWT (ACCESS TOKEN) ---

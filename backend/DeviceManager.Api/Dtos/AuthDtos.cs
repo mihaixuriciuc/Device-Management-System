@@ -29,4 +29,4 @@ public record LoginDto(
     string Password
 );
 
-public record AuthResponseDto(bool IsSuccess, string? Message);
+public record AuthResponseDto(bool IsSuccess, string? Message, string? Role );

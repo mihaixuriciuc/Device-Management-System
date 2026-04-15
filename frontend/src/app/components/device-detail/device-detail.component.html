@@ -10,6 +10,7 @@
         <span class="status-badge">{{ device.status }}</span>
 
         <button
+          *ngIf="authService.isAdmin()"
           class="update-btn"
           [routerLink]="['/devices', device.id, 'edit']"
         >
@@ -60,5 +61,5 @@
     </div>
   </div>
 
-  <button class="back-link" routerLink="/">← Back to Inventory</button>
+  <button class="back-link" routerLink="/devices">← Back to Inventory</button>
 </div>

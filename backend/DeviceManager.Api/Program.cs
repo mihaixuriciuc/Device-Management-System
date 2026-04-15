@@ -1,57 +1,156 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using DeviceManager.Api.Data;
+using DeviceManager.Api.Models;
 using DeviceManager.Api.Services;
+using System.Text.Json.Serialization;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Add services to the container.
-builder.Services.AddControllers(); // THIS IS CRUCIAL - It tells the app to look for your Controllers folder
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// --- 1. CORE SERVICES ---
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // This stops the "Null" issue caused by circular references
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.WriteIndented = true; 
+    });
 
 
-// 2. Connect to the Database (using the name from appsettings.json)
-builder.Services.AddControllers(options =>
-{
-    options.AllowEmptyInputInBodyModelBinding = false;
-});
-
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-
-// 2. THIS WAS MISSING: Connect to the Database
+// --- 2. DATABASE & IDENTITY ---
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 1. Define the "Allow Angular" Policy
+// Configure Identity to use our ApplicationUser
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+{
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 8;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequireUppercase = true;
+})
+.AddEntityFrameworkStores<AppDbContext>()
+.AddDefaultTokenProviders();
+
+// --- 3. AUTHENTICATION & JWT ---
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var key = Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? "Your_Super_Secret_Fallback_Key_32_Chars");
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(key)
+    };
+
+    options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                if (context.Request.Cookies.ContainsKey("AccessToken"))
+                {
+                    context.Token = context.Request.Cookies["AccessToken"];
+                }
+                return Task.CompletedTask;
+            }
+        };
+});
+
+// --- 4. CORS & DEPENDENCY INJECTION ---
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAngularApp",
-        policy => policy.WithOrigins("http://localhost:4200") // The address of your Angular app
-                        .AllowAnyHeader()
-                        .AllowAnyMethod());
+    options.AddPolicy("AllowAngularApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200") // Must be the exact Angular URL!
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // <--- CRITICAL FOR COOKIES
+    });
 });
+
+// Register your services
 builder.Services.AddScoped<DeviceServiceInterface, DeviceService>();
+// builder.Services.AddScoped<IAuthService, AuthService>(); // Add this once you create AuthService
+// Inside the Dependency Injection section
+builder.Services.AddScoped<AuthServiceInterface,AuthService>();
+
 var app = builder.Build();
+
 
 app.UseCors("AllowAngularApp");
 
-// 3. Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-// We commented this out earlier to avoid the HTTPS warning
-// app.UseHttpsRedirection();
-
+// CRITICAL: Authentication MUST come before Authorization
+app.UseAuthentication(); 
 app.UseAuthorization();
 
-// 4. Map the Controllers (This is the "On" switch for your DevicesController)
 app.MapControllers();
+
+// --- ADMIN SEEDER SCRIPT ---
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+    // 1. Create the Admin Role if it doesn't exist
+    if (!await roleManager.RoleExistsAsync("Admin"))
+    {
+        await roleManager.CreateAsync(new IdentityRole("Admin"));
+    }
+
+    // 2. Create the First Admin User if they don't exist
+    var adminEmail = "admin@devicemanager.com";
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+
+    if (adminUser == null)
+    {
+        adminUser = new ApplicationUser
+        {
+            UserName = adminEmail,
+            Email = adminEmail,
+            FirstName = "System",
+            LastName = "Admin",
+            EmailConfirmed = true
+        };
+
+        var result = await userManager.CreateAsync(adminUser, "SuperSecretAdmin123!");
+        
+        if (result.Succeeded)
+        {
+            // 3. Attach the Admin role to this user
+            await userManager.AddToRoleAsync(adminUser, "Admin");
+        }
+    }
+}
+
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var roles = new[] { "Admin", "User" };
+
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+        {
+            await roleManager.CreateAsync(new IdentityRole(role));
+        }
+    }
+}
 
 app.Run();
 

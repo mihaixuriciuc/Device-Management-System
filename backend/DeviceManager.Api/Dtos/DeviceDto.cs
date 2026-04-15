@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DeviceManager.Api.Models;
 
@@ -38,7 +39,15 @@ public class DeviceDto
   public string Description { get; set; } = string.Empty;
 
   [Required]
-  [RegularExpression("^(Available|Unavailable|In Service|Retired)$",
-      ErrorMessage = "Status must be: Available, Unavailable, In Service, or Retired")]
+  [RegularExpression("^(Available|Unavailable|In Service|In Use)$",
+      ErrorMessage = "Status must be: Available, Unavailable, In Service, or In Use")]
   public string Status { get; set; } = "Available";
+
+
+  // The ID of the user
+    public string? AssignedUserId { get; set; }
+
+    // The actual User object
+    [ForeignKey("AssignedUserId")]
+    public virtual ApplicationUser? AssignedUser { get; set; } // 'virtual' helps EF load it
 }

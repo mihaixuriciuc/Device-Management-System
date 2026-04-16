@@ -1,3 +1,4 @@
+using DeviceManager.Api.DTOs;
 using DeviceManager.Api.Models;
 
 namespace DeviceManager.Api.Services;

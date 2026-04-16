@@ -139,4 +139,151 @@
       transform: translateY(0);
     }
   }
+  .description-section {
+    max-width: 800px;
+    margin-top: 2rem;
+    font-family: "Inter", sans-serif;
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+
+      h5 {
+        font-weight: 600;
+        color: #334155;
+        margin: 0;
+      }
+    }
+  }
+
+  // ✨ The Magic Button
+  .btn-ai-magic {
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(168, 85, 247, 0.2);
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(168, 85, 247, 0.3);
+    }
+
+    &:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+  }
+
+  // 🖋️ The Main Textarea
+  .modern-textarea {
+    width: 100%;
+    min-height: 120px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 15px;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #1e293b;
+    resize: vertical;
+    background-color: #ffffff;
+    transition: border-color 0.2s;
+
+    &:focus {
+      outline: none;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+  }
+
+  // 🔮 The AI Suggestion Card
+  .ai-card-overlay {
+    margin-top: 1.5rem;
+    background: #f8fafc;
+    border: 1px solid #ddd6fe;
+    border-left: 5px solid #8b5cf6;
+    border-radius: 12px;
+    overflow: hidden;
+    animation: slideIn 0.3s ease-out;
+
+    .ai-card-header {
+      padding: 10px 15px;
+      display: flex;
+      justify-content: space-between;
+      background: #f5f3ff;
+
+      .ai-badge {
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 1px;
+        color: #7c3aed;
+      }
+
+      .btn-close-small {
+        border: none;
+        background: none;
+        font-size: 1.2rem;
+        color: #94a3b8;
+        cursor: pointer;
+      }
+    }
+
+    .ai-card-body {
+      padding: 15px;
+      p {
+        margin: 0;
+        font-style: italic;
+        color: #4c1d95;
+        font-size: 1rem;
+      }
+    }
+
+    .ai-card-footer {
+      padding: 10px 15px;
+      display: flex;
+      gap: 10px;
+
+      .btn-apply {
+        background: #7c3aed;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        &:hover {
+          background: #6d28d9;
+        }
+      }
+
+      .btn-discard {
+        background: transparent;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        &:hover {
+          background: #f1f5f9;
+        }
+      }
+    }
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }

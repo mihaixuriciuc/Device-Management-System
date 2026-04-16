@@ -1,5 +1,15 @@
 <header>
   <h1>Device Management System</h1>
+
+  <div class="header-right">
+    <button
+      *ngIf="authService.isLoggedIn()"
+      (click)="logout()"
+      class="logout-btn"
+    >
+      Logout
+    </button>
+  </div>
 </header>
 
 <main>

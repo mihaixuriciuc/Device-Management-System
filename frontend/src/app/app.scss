@@ -3,11 +3,12 @@ $primary-blue: #3182ce;
 $bg-gray: #f7fafc;
 $text-dark: #2d3748;
 $border-color: #e2e8f0;
+$error-red: #e53e3e; // Added for logout button
 
 :host {
   display: flex;
   flex-direction: column;
-  min-height: 100vh; // Forces footer to the bottom
+  min-height: 100vh;
   background-color: $bg-gray;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -17,26 +18,31 @@ header {
   border-bottom: 1px solid $border-color;
   padding: 1.5rem 0;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  position: relative; // Needed for absolute positioning of logout button
 
   h1 {
     max-width: 900px;
-    margin-left: 0 auto;
+    margin: 0 auto;
     padding: 0 20px;
     color: $text-dark;
     font-size: 1.5rem;
     font-weight: 700;
     letter-spacing: -0.5px;
     text-align: left;
-
-    // Optional: Add a small blue accent bar next to the title
     border-left: 4px solid $primary-blue;
+  }
+
+  .header-right {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
   }
 }
 
 main {
-  flex: 1; // This pushes the footer down if the content is short
+  flex: 1;
   padding: 20px 0;
-  // This ensures the router-outlet content is centered
 }
 
 footer {
@@ -52,5 +58,26 @@ footer {
     color: #a0aec0;
     font-size: 0.85rem;
     text-align: center;
+  }
+}
+
+// Logout button - matches your professional style
+.logout-btn {
+  padding: 8px 20px;
+  background-color: $error-red;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: darken($error-red, 8%);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 }

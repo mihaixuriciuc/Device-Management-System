@@ -59,7 +59,33 @@
       <h3><i class="icon"></i> Description</h3>
       <p class="description-text">{{ device.description }}</p>
     </div>
-  </div>
+    <div class="d-flex justify-content-end mb-3">
+      <button
+        type="button"
+        class="btn-ai-magic"
+        (click)="generateAIContent()"
+        [disabled]="isAiLoading"
+      >
+        {{ isAiLoading ? "Thinking..." : "✨ Get AI Suggestion" }}
+      </button>
+    </div>
 
-  <button class="back-link" routerLink="/devices">← Back to Inventory</button>
+    <div *ngIf="showAiPreview" class="ai-card-overlay">
+      <div class="ai-card-header">
+        <span class="ai-badge">AI SUGGESTION</span>
+        <button
+          type="button"
+          class="btn-close-small"
+          (click)="closeAiPreview()"
+        >
+          ×
+        </button>
+      </div>
+
+      <div class="ai-card-body">
+        <p>"{{ aiGeneratedDescription }}"</p>
+      </div>
+    </div>
+    <button class="back-link" routerLink="/devices">← Back to Inventory</button>
+  </div>
 </div>

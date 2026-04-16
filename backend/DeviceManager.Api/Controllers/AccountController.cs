@@ -12,17 +12,19 @@ public class AccountController : ControllerBase
 
     public AccountController(AuthServiceInterface authService) => _authService = authService;
 
-    private void SetTokenCookies(string accessToken, string refreshToken)
+   private void SetTokenCookies(string accessToken, string refreshToken)
     {
         var cookieOptions = new CookieOptions
         {
-            HttpOnly = true, 
-            Secure = true, // Set to false if testing without HTTPS, true for Production
-            SameSite = SameSiteMode.Strict, 
-            Expires = DateTime.UtcNow.AddDays(7)
+            HttpOnly = true,
+            Secure = false,           // ← Set to true in production (HTTPS)
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTime.UtcNow.AddMinutes(15)   // Access token short lived
         };
 
         Response.Cookies.Append("AccessToken", accessToken, cookieOptions);
+
+        cookieOptions.Expires = DateTime.UtcNow.AddDays(7); // Refresh token longer
         Response.Cookies.Append("RefreshToken", refreshToken, cookieOptions);
     }
 

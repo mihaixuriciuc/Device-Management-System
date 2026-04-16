@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-using DeviceManager.Api.Models;
+using DeviceManager.Api.DTOs;
 using DeviceManager.Api.Services;
 
 namespace DeviceManager.Api.Controllers;
@@ -92,5 +92,15 @@ public class DevicesController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         return await _deviceService.DeleteDeviceAsync(id) ? NoContent() : NotFound();
+    }
+
+    [HttpGet("check-serial")]
+    public async Task<IActionResult> CheckSerialExists([FromQuery] string sn)
+    {
+        if (string.IsNullOrWhiteSpace(sn))
+            return BadRequest(new { message = "Serial number is required" });
+
+        var exists = await _deviceService.CheckSerialNumberExistsAsync(sn);
+        return Ok(exists);
     }
 }

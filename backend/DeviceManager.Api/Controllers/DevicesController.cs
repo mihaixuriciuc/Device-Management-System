@@ -93,4 +93,14 @@ public class DevicesController : ControllerBase
     {
         return await _deviceService.DeleteDeviceAsync(id) ? NoContent() : NotFound();
     }
+
+    [HttpGet("check-serial")]
+    public async Task<IActionResult> CheckSerialExists([FromQuery] string sn)
+    {
+        if (string.IsNullOrWhiteSpace(sn))
+            return BadRequest(new { message = "Serial number is required" });
+
+        var exists = await _deviceService.CheckSerialNumberExistsAsync(sn);
+        return Ok(exists);
+    }
 }

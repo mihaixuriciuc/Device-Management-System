@@ -8,25 +8,22 @@ using DeviceManager.Api.Models;
 using DeviceManager.Api.Services;
 using System.Text.Json.Serialization;
 
-
-
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. CORE SERVICES ---
+// --- Core Services ---
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // This stops the "Null" issue caused by circular references
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-        options.JsonSerializerOptions.WriteIndented = true; 
+        options.JsonSerializerOptions.WriteIndented = true;
     });
 
+builder.Services.AddHttpClient();
 
-// --- 2. DATABASE & IDENTITY ---
+// --- Database & Identity ---
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Configure Identity to use our ApplicationUser
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     options.Password.RequireDigit = true;
@@ -37,9 +34,9 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
-// --- 3. AUTHENTICATION & JWT ---
+// --- JWT + Cookie Authentication ---
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var key = Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? "Your_Super_Secret_Fallback_Key_32_Chars");
+var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]!);
 
 builder.Services.AddAuthentication(options =>
 {
@@ -59,67 +56,64 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(key)
     };
 
+    // Read JWT from HttpOnly cookie
     options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
         {
-            OnMessageReceived = context =>
+            if (context.Request.Cookies.ContainsKey("AccessToken"))
             {
-                if (context.Request.Cookies.ContainsKey("AccessToken"))
-                {
-                    context.Token = context.Request.Cookies["AccessToken"];
-                }
-                return Task.CompletedTask;
+                context.Token = context.Request.Cookies["AccessToken"];
             }
-        };
+            return Task.CompletedTask;
+        }
+    };
 });
 
-// --- 4. CORS & DEPENDENCY INJECTION ---
+// CORS (important for Angular)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularApp", policy =>
     {
-        policy.WithOrigins("http://localhost:4200") // Must be the exact Angular URL!
+        policy.WithOrigins("http://localhost:4200")
               .AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowCredentials(); // <--- CRITICAL FOR COOKIES
+              .AllowCredentials();
     });
 });
 
-// Register your services
+// Services
+builder.Services.AddScoped<AiServiceInterface, AiService>();
 builder.Services.AddScoped<DeviceServiceInterface, DeviceService>();
-// builder.Services.AddScoped<IAuthService, AuthService>(); // Add this once you create AuthService
-// Inside the Dependency Injection section
-builder.Services.AddScoped<AuthServiceInterface,AuthService>();
+builder.Services.AddScoped<AuthServiceInterface, AuthService>();
 
 var app = builder.Build();
 
-
 app.UseCors("AllowAngularApp");
 
-// CRITICAL: Authentication MUST come before Authorization
-app.UseAuthentication(); 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-// --- ADMIN SEEDER SCRIPT ---
+// Seed roles + admin user
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-    // 1. Create the Admin Role if it doesn't exist
-    if (!await roleManager.RoleExistsAsync("Admin"))
+    string[] roles = { "Admin", "User" };
+    foreach (var role in roles)
     {
-        await roleManager.CreateAsync(new IdentityRole("Admin"));
+        if (!await roleManager.RoleExistsAsync(role))
+            await roleManager.CreateAsync(new IdentityRole(role));
     }
 
-    // 2. Create the First Admin User if they don't exist
+    // Seed admin
     var adminEmail = "admin@devicemanager.com";
-    var adminUser = await userManager.FindByEmailAsync(adminEmail);
-
-    if (adminUser == null)
+    if (await userManager.FindByEmailAsync(adminEmail) == null)
     {
-        adminUser = new ApplicationUser
+        var admin = new ApplicationUser
         {
             UserName = adminEmail,
             Email = adminEmail,
@@ -128,27 +122,9 @@ using (var scope = app.Services.CreateScope())
             EmailConfirmed = true
         };
 
-        var result = await userManager.CreateAsync(adminUser, "SuperSecretAdmin123!");
-        
+        var result = await userManager.CreateAsync(admin, "SuperSecretAdmin123!");
         if (result.Succeeded)
-        {
-            // 3. Attach the Admin role to this user
-            await userManager.AddToRoleAsync(adminUser, "Admin");
-        }
-    }
-}
-
-using (var scope = app.Services.CreateScope())
-{
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    var roles = new[] { "Admin", "User" };
-
-    foreach (var role in roles)
-    {
-        if (!await roleManager.RoleExistsAsync(role))
-        {
-            await roleManager.CreateAsync(new IdentityRole(role));
-        }
+            await userManager.AddToRoleAsync(admin, "Admin");
     }
 }
 

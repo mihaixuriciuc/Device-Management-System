@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-using DeviceManager.Api.Models;
+using DeviceManager.Api.DTOs;
 using DeviceManager.Api.Services;
 
 namespace DeviceManager.Api.Controllers;

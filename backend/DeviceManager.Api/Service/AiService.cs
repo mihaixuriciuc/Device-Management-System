@@ -1,6 +1,6 @@
 using System.Text;
 using System.Text.Json;
-using DeviceManager.Api.Models;
+using DeviceManager.Api.DTOs;
 
 namespace DeviceManager.Api.Services;
 

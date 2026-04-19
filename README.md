@@ -18,56 +18,66 @@ A full-stack device inventory management system built with Angular 21 (Frontend)
 
 ### 1. Clone the Repository
 
-git clone https://github.com/YOUR-USERNAME/Device-Management-System.git
-cd Device-Management-System
+    git clone https://github.com/mihaixuriciuc/Device-Management-System.git
+    cd Device-Management-System
 
-### 2. Backend Setup (.NET 8)
+### 2. Install All Dependencies (One Command)
 
-Navigate to the backend folder:
-cd backend/DeviceManager.Api
+We provide cross-platform setup scripts so you can install everything in one go:
 
-Update appsettings.json
+On Windows (double-click this file):
+setup.bat
+
+On macOS / Linux (run in terminal):
+chmod +x setup.sh
+./setup.sh
+
+These scripts will automatically:
+
+- Restore all .NET backend packages
+- Install all Angular frontend dependencies (npm install)
+
+### 3. Configure the Application
+
 Open backend/DeviceManager.Api/appsettings.json and replace the placeholders:
 
-"ConnectionStrings": {  
- "DefaultConnection": "Server=localhost,1433;Database=DeviceDb;User Id=sa;Password=YOUR_SQL_SA_PASSWORD;TrustServerCertificate=True;"
-},
-"Jwt": {  
- "Key": "YOUR_LONG_JWT_SECRET_KEY_HERE_AT_LEAST_32_CHARACTERS",  
- "Issuer": "DeviceManager.Api",  
- "Audience": "DeviceManager.Angular"
-},
-"Gemini": {  
- "ApiKey": "your_gemini_api_key_here"
-},
-"AdminSettings": {  
- "Email": "admin@devicemanager.com",  
- "Password": "SuperSecretAdmin123!"
-}
+    {
+      "ConnectionStrings": {
+        "DefaultConnection": "Server=localhost,1433;Database=DeviceDb;User Id=sa;Password=YOUR_SQL_SA_PASSWORD;TrustServerCertificate=True;"
+      },
+      "Jwt": {
+        "Key": "YOUR_LONG_JWT_SECRET_KEY_HERE_AT_LEAST_32_CHARACTERS",
+        "Issuer": "DeviceManager.Api",
+        "Audience": "DeviceManager.Angular"
+      },
+      "Gemini": {
+        "ApiKey": "your_gemini_api_key_here"
+      },
+      "AdminSettings": {
+        "Email": "admin@devicemanager.com",
+        "Password": "SuperSecretAdmin123!"
+      }
+    }
 
-Create and Seed the Database
+Create and seed the database:
 Open SQL Server Management Studio (SSMS) or Azure Data Studio and run the scripts in this exact order:
 
 1. DBScripts/CreateDatabase.sql → Creates the DeviceDb database
 2. DBScripts/SeedData.sql → Inserts 15 sample devices
 
-Run the Backend:
+### 4. Start the Application
+
+Backend (in one terminal):
+cd backend/DeviceManager.Api
 dotnet run
 
-The API will start at: http://localhost:5246
+API will be available at: http://localhost:5246
 
-### 3. Frontend Setup (Angular)
-
-Navigate to the frontend folder:
-cd ../../frontend
-
-Install dependencies:
-npm install
-
-Start the Angular app:
+Frontend (in another terminal):
+cd frontend
 ng serve
 
-Open your browser and go to: http://localhost:4200
+Open your browser: http://localhost:4200
 
 ---
 
@@ -84,15 +94,17 @@ Regular Users: Register new accounts from the Register page.
 
 ## Project Structure
 
-Device-Management-System/
-├── backend/
-│ └── DeviceManager.Api/ # .NET 8 Web API + Identity
-├── frontend/ # Angular 21 Frontend
-├── DBScripts/
-│ ├── CreateDatabase.sql
-│ └── SeedData.sql # 15 sample devices
-├── DeviceManager.Tests/ # Integration tests
-└── README.md
+    Device-Management-System/
+    ├── backend/
+    │   └── DeviceManager.Api/          # .NET 8 Web API + Identity
+    ├── frontend/                       # Angular 21 Frontend
+    ├── DBScripts/
+    │   ├── CreateDatabase.sql
+    │   └── SeedData.sql                # 15 sample devices
+    ├── DeviceManager.Tests/            # Integration tests
+    ├── setup.bat                       # Windows setup script
+    ├── setup.sh                        # macOS / Linux setup script
+    └── README.md
 
 ---
 
@@ -100,7 +112,7 @@ Device-Management-System/
 
 - Backend: .NET 8, Entity Framework Core, ASP.NET Identity, JWT
 - Frontend: Angular 21, Standalone Components, Reactive Forms
-- Database: SQL Server
+- Database: MSSQL Server
 - AI: Google Gemini
 
 ---

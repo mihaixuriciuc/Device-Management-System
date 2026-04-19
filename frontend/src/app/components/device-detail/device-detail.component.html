@@ -1,0 +1,91 @@
+<div class="detail-container" *ngIf="device">
+  <div class="card">
+    <div class="header">
+      <div>
+        <h1>{{ device.name }}</h1>
+        <p class="subtitle">{{ device.manufacturer }} | {{ device.type }}</p>
+      </div>
+
+      <div class="header-right">
+        <span class="status-badge">{{ device.status }}</span>
+
+        <button
+          *ngIf="authService.isAdmin()"
+          class="update-btn"
+          [routerLink]="['/devices', device.id, 'edit']"
+        >
+          Update Device
+        </button>
+      </div>
+    </div>
+
+    <hr />
+
+    <div class="specs-section">
+      <h3><i class="icon"></i> Hardware</h3>
+      <div class="specs-grid">
+        <div class="spec-item">
+          <label>Processor</label>
+          <p>{{ device.processor }}</p>
+        </div>
+        <div class="spec-item">
+          <label>RAM</label>
+          <p>{{ device.ramAmount }}</p>
+        </div>
+        <div class="spec-item">
+          <label>Serial Number</label>
+          <p>
+            <code>{{ device.serialNumber }}</code>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="specs-section">
+      <h3><i class="icon"></i> Software & System</h3>
+      <div class="specs-grid">
+        <div class="spec-item">
+          <label>Operating System</label>
+          <p>{{ device.operatingSystem }} (v{{ device.osVersion }})</p>
+        </div>
+        <div class="spec-item">
+          <label>Date Added</label>
+          <p>{{ device.dateAdded | date: "mediumDate" }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="specs-section">
+      <h3><i class="icon"></i> Description</h3>
+      <p class="description-text">{{ device.description }}</p>
+    </div>
+    <div class="d-flex justify-content-end mb-3">
+      <button
+        type="button"
+        class="btn-ai-magic"
+        (click)="generateAIContent()"
+        [disabled]="isAiLoading"
+      >
+        {{ isAiLoading ? "Thinking..." : "✨ Get AI Suggestion" }}
+      </button>
+    </div>
+
+    <div *ngIf="showAiPreview" class="ai-card-overlay">
+      <div class="ai-card-header">
+        <span class="ai-badge">AI SUGGESTION</span>
+        <button
+          type="button"
+          class="btn-close-small"
+          (click)="closeAiPreview()"
+        >
+          ×
+        </button>
+      </div>
+
+      <div class="ai-card-body">
+        <p>"{{ aiGeneratedDescription }}"</p>
+      </div>
+    </div>
+    <button class="back-link" routerLink="/devices">← Back to Inventory</button>
+  </div>
+</div>

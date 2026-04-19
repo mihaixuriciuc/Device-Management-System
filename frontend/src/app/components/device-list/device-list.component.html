@@ -1,0 +1,103 @@
+<div class="device-container">
+  <div class="list-header">
+    <h2>Device Inventory</h2>
+    <div class="search-box" style="margin-bottom: 20px">
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        (keyup.enter)="searchDevices()"
+        placeholder="Search devices (name, manufacturer, RAM, processor)..."
+        style="
+          width: 100%;
+          padding: 12px;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          font-size: 1rem;
+        "
+      />
+    </div>
+    <div class="header-actions">
+      <button
+        *ngIf="authService.isAdmin()"
+        class="create-btn"
+        routerLink="/devices/new"
+      >
+        + Add New Device
+      </button>
+
+      <button
+        *ngIf="!authService.isAdmin()"
+        class="profile-btn"
+        routerLink="/profile"
+      >
+        My Profile
+      </button>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Device Name</th>
+        <th>Manufacturer</th>
+        <th>Type</th>
+        <th>Status</th>
+        <th>User</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr
+        *ngFor="let device of devices"
+        (click)="goToDetails(device.id)"
+        class="clickable-row"
+      >
+        <td>{{ device.name }}</td>
+        <td>{{ device.manufacturer }}</td>
+        <td>{{ device.type }}</td>
+        <td>
+          <span class="status-pill" [attr.data-status]="device.status">
+            {{ device.status }}
+          </span>
+        </td>
+        <td>
+          <ng-container *ngIf="device.assignedUser; else noUser">
+            {{ device.assignedUser.firstName }}
+            {{ device.assignedUser.lastName }}
+          </ng-container>
+
+          <ng-template #noUser> -- </ng-template>
+        </td>
+
+        <td class="action-cell">
+          <ng-container *ngIf="authService.isAdmin()">
+            <button
+              class="delete-btn"
+              (click)="deleteDevice($event, device.id)"
+            >
+              Delete
+            </button>
+          </ng-container>
+
+          <ng-container *ngIf="!authService.isAdmin()">
+            <button
+              *ngIf="device.status === 'Available'"
+              class="assign-btn"
+              (click)="assignToMe($event, device.id)"
+            >
+              Assign
+            </button>
+
+            <button
+              *ngIf="device.status == 'In Use'"
+              class="unassign-btn"
+              (click)="unassign($event, device.id)"
+            >
+              Unassign
+            </button>
+          </ng-container>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

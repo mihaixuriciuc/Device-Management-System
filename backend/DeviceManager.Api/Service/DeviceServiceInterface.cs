@@ -25,4 +25,6 @@ public interface DeviceServiceInterface
     // UTILITY METHODS
     // ==========================================
     Task<bool> CheckSerialNumberExistsAsync(string serialNumber, int? excludeDeviceId = null);
+
+    Task<IEnumerable<Device>> SearchDevicesAsync(string query);
 }

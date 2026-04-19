@@ -2,45 +2,54 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { Router } from '@angular/router';
-
-// This interface matches your .NET AuthResponseDto exactly!
-export interface AuthResponse {
-  isSuccess: boolean;
-  message: string;
-  role?: string;
-}
+import { API_CONFIG } from '../config/api.config';
+import { AuthResponse, CurrentUser } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:5246/api/account';
-  private httpOptions = {
-    withCredentials: true,
-  };
+  private apiUrl = `${API_CONFIG.baseUrl}/account`;
 
-  // BehaviorSubject is like a live radio station broadcasting the user's role
-  private userRoleSubject = new BehaviorSubject<string | null>(
-    localStorage.getItem('userRole'),
-  );
+  private httpOptions = { withCredentials: true };
+
+  private userRoleSubject = new BehaviorSubject<string | null>(null);
   public userRole$ = this.userRoleSubject.asObservable();
+
+  private currentUserSubject = new BehaviorSubject<CurrentUser | null>(null);
+  public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(
     private http: HttpClient,
     private router: Router,
-  ) {}
+  ) {
+    // Load from localStorage on startup
+    const savedRole = localStorage.getItem('userRole');
+    const savedUser = localStorage.getItem('currentUser');
+
+    if (savedRole) this.userRoleSubject.next(savedRole);
+    if (savedUser) this.currentUserSubject.next(JSON.parse(savedUser));
+  }
 
   login(credentials: any): Observable<AuthResponse> {
     return this.http
       .post<AuthResponse>(`${this.apiUrl}/login`, credentials, {
-        withCredentials: true, // 🍪 CRITICAL: Tells Angular to accept and send the HttpOnly cookies!
+        withCredentials: true,
       })
       .pipe(
         tap((response) => {
-          // If login works, save the role so the UI knows who is in charge
           if (response.isSuccess && response.role) {
             localStorage.setItem('userRole', response.role);
             this.userRoleSubject.next(response.role);
+
+            const user: CurrentUser = {
+              firstName: response.firstName || 'User',
+              lastName: response.lastName || '',
+              role: response.role,
+            };
+
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            this.currentUserSubject.next(user);
           }
         }),
       );
@@ -49,43 +58,66 @@ export class AuthService {
   register(userData: any): Observable<AuthResponse> {
     return this.http
       .post<AuthResponse>(`${this.apiUrl}/register`, userData, {
-        withCredentials: true, // 🍪 CRITICAL: Accepts the cookies generated during registration
+        withCredentials: true,
       })
       .pipe(
         tap((response) => {
-          // Because your .NET API automatically logs them in after a successful register,
-          // we save the role to instantly update the UI, just like the login method!
           if (response.isSuccess && response.role) {
             localStorage.setItem('userRole', response.role);
             this.userRoleSubject.next(response.role);
+
+            const user: CurrentUser = {
+              firstName: response.firstName || 'User',
+              lastName: response.lastName || '',
+              role: response.role,
+            };
+
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            this.currentUserSubject.next(user);
           }
         }),
       );
   }
-  logout(): void {
-    // 1. WIPE THE MEMORY IMMEDIATELY!
-    // Do this first so the Guard instantly locks down the app.
-    localStorage.removeItem('userRole');
-    this.userRoleSubject.next(null);
 
-    // 2. KICK THEM OUT IMMEDIATELY!
+  // Helper: Read AccessToken cookie
+  private getAccessTokenFromCookie(): string | null {
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+      const [name, value] = cookie.trim().split('=');
+      if (name === 'AccessToken') return decodeURIComponent(value);
+    }
+    return null;
+  }
+
+  // Helper: Decode FirstName + LastName from JWT
+  private decodeUserFromToken(token: string): CurrentUser {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return {
+        firstName: payload.FirstName || 'User',
+        lastName: payload.LastName || '',
+        role:
+          payload[
+            'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
+          ] || 'User',
+      };
+    } catch {
+      return { firstName: 'User', lastName: '', role: 'User' };
+    }
+  }
+
+  logout(): void {
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('currentUser');
+    this.userRoleSubject.next(null);
+    this.currentUserSubject.next(null);
     this.router.navigate(['/login']);
 
-    // 3. TELL THE SERVER TO KILL THE COOKIE IN THE BACKGROUND
-    // We don't care if this takes a second, or even if it fails. The frontend is already locked.
-    this.http.post(`${this.apiUrl}/logout`, {}, this.httpOptions).subscribe({
-      next: () => console.log('Secure cookies destroyed on the server.'),
-      error: (err) =>
-        console.error(
-          'Server logout failed, but frontend is still secure.',
-          err,
-        ),
-    });
+    this.http.post(`${this.apiUrl}/logout`, {}, this.httpOptions).subscribe();
   }
-  // --- Helper Methods for your UI Components ---
 
   isLoggedIn(): boolean {
-    return !!this.userRoleSubject.value; // True if a role exists
+    return !!this.userRoleSubject.value;
   }
 
   isAdmin(): boolean {

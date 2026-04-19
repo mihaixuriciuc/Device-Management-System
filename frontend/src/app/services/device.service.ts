@@ -2,13 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Device } from '../models/device.model';
+import { API_CONFIG } from '../config/api.config';
 
 @Injectable({
   providedIn: 'root',
 })
 export class DeviceService {
   // Pointing directly to your Devices controller
-  private apiUrl = 'http://localhost:5246/api/devices';
+  private apiUrl = `${API_CONFIG.baseUrl}/devices`;
 
   // CRITICAL: This tells Angular to send the secure Admin/User cookies with EVERY request
   private httpOptions = {
@@ -59,6 +60,21 @@ export class DeviceService {
     return this.http.post(
       `${this.apiUrl}/${id}/unassign`,
       {},
+      this.httpOptions,
+    );
+  }
+
+  // Get devices assigned to the current logged-in user
+  getMyDevices(): Observable<Device[]> {
+    return this.http.get<Device[]>(
+      `${this.apiUrl}/my-devices`,
+      this.httpOptions,
+    );
+  }
+
+  searchDevices(query: string): Observable<Device[]> {
+    return this.http.get<Device[]>(
+      `${this.apiUrl}/search?q=${encodeURIComponent(query)}`,
       this.httpOptions,
     );
   }

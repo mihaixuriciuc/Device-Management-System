@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using DeviceManager.Api.Models; // This makes DeviceDto work!
+using DeviceManager.Api.DTOs; // This makes DeviceDto work!
 using DeviceManager.Api.Services;
 
 namespace DeviceManager.Api.Controllers;

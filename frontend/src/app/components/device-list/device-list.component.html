@@ -1,7 +1,21 @@
 <div class="device-container">
   <div class="list-header">
     <h2>Device Inventory</h2>
-
+    <div class="search-box" style="margin-bottom: 20px">
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        (keyup.enter)="searchDevices()"
+        placeholder="Search devices (name, manufacturer, RAM, processor)..."
+        style="
+          width: 100%;
+          padding: 12px;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          font-size: 1rem;
+        "
+      />
+    </div>
     <div class="header-actions">
       <button
         *ngIf="authService.isAdmin()"

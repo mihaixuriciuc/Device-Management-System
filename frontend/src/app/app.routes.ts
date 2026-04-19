@@ -8,6 +8,7 @@ import { HomePageComponent } from './components/home-page/home-page.component';
 import { RegisterComponent } from './components/register/register.component';
 import { LoginComponent } from './components/login/login.component';
 import { authGuard } from './guards/auth-guard';
+import { ProfileComponent } from './components/profile-page/profile-page.component';
 
 export const routes: Routes = [
   // Public routes
@@ -30,6 +31,12 @@ export const routes: Routes = [
   {
     path: 'devices/:id/edit',
     component: DeviceEditComponent,
+    canActivate: [authGuard],
+  },
+
+  {
+    path: 'profile',
+    component: ProfileComponent,
     canActivate: [authGuard],
   },
 

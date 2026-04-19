@@ -117,16 +117,23 @@ frontend/
           login.component.scss
           login.component.spec.ts
           login.component.ts
+        profile-page/
+          profile-page.component.html
+          profile-page.component.scss
+          profile-page.component.ts
         register/
           register.component.html
           register.component.scss
           register.component.spec.ts
           register.component.ts
+      config/
+        api.config.ts
       guards/
         auth-guard.spec.ts
         auth-guard.ts
       models/
         device.model.ts
+        user.model.ts
       services/
         ai.service.spec.ts
         ai.service.ts
@@ -154,7 +161,6 @@ frontend/
   tsconfig.spec.json
 .gitignore
 .prettierrc
-codebase.txt
 Device-Management-System.sln
 README.md
 </directory_structure>
@@ -162,10 +168,321 @@ README.md
 <files>
 This section contains the contents of the repository's files.
 
+<file path="frontend/src/app/components/profile-page/profile-page.component.html">
+<div class="profile-container">
+  <div class="header-actions">
+    <button class="back-link" routerLink="/devices">← Back to Devices</button>
+  </div>
+
+  <div class="profile-card">
+    <h2>My Profile</h2>
+
+    <div class="user-info">
+      <p>
+        <strong>Full Name:</strong> {{ currentUser?.firstName }}
+        {{ currentUser?.lastName }}
+      </p>
+      <p>
+        <strong>Role:</strong> {{ currentUser?.role || userRole || "User" }}
+      </p>
+    </div>
+
+    <h3>My Assigned Devices ({{ assignedDevices.length }})</h3>
+
+    <div *ngIf="isLoading" class="loading">Loading your devices...</div>
+
+    <div *ngIf="!isLoading && assignedDevices.length === 0" class="no-devices">
+      You don't have any devices assigned yet.
+    </div>
+
+    <table *ngIf="assignedDevices.length > 0" class="devices-table">
+      <thead>
+        <tr>
+          <th>Device Name</th>
+          <th>Manufacturer</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let device of assignedDevices">
+          <td>{{ device.name }}</td>
+          <td>{{ device.manufacturer }}</td>
+          <td>
+            <span class="status-pill" [attr.data-status]="device.status">
+              {{ device.status }}
+            </span>
+          </td>
+          <td>
+            <button class="unassign-btn" (click)="unassignDevice(device.id)">
+              Unassign
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <button class="logout-btn" (click)="logout()">Logout</button>
+</div>
+</file>
+
+<file path="frontend/src/app/components/profile-page/profile-page.component.scss">
+.profile-container {
+  padding: 40px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.header-actions {
+  margin-bottom: 20px;
+
+  .back-link {
+    background: none;
+    border: none;
+    color: #4a5568;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    text-decoration: none;
+    padding: 0;
+
+    &:hover {
+      color: #3182ce;
+    }
+  }
+}
+
+.profile-card {
+  background: white;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+  margin-bottom: 30px;
+
+  h2 {
+    margin: 0 0 20px 0;
+    color: #1a202c;
+    font-size: 2rem;
+  }
+
+  .user-info {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #edf2f7;
+
+    p {
+      margin: 8px 0;
+      font-size: 1.05rem;
+      color: #2d3748;
+
+      strong {
+        color: #4a5568;
+        width: 100px;
+        display: inline-block;
+      }
+    }
+  }
+
+  h3 {
+    margin: 0 0 15px 0;
+    color: #2d3748;
+    font-size: 1.3rem;
+  }
+}
+
+.loading,
+.no-devices {
+  text-align: center;
+  padding: 40px;
+  color: #718096;
+  font-style: italic;
+}
+
+.devices-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+
+  th {
+    background-color: #f8f9fa;
+    padding: 14px 16px;
+    text-align: left;
+    color: #718096;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+  }
+
+  td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #edf2f7;
+    color: #2d3748;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+.status-pill {
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+
+  &[data-status="Available"] {
+    background-color: #c6f6d5;
+    color: #22543d;
+  }
+  &[data-status="In Use"] {
+    background-color: #ebf8ff;
+    color: #2b6cb0;
+  }
+  &[data-status="In Service"] {
+    background-color: #feebc8;
+    color: #744210;
+  }
+  &[data-status="Unavailable"] {
+    background-color: #fed7d7;
+    color: #822727;
+  }
+}
+
+.unassign-btn {
+  padding: 6px 14px;
+  background-color: #fed7d7;
+  color: #c53030;
+  border: 1px solid #feb2b2;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #c53030;
+    color: white;
+  }
+}
+
+.logout-btn {
+  padding: 12px 28px;
+  background-color: #e53e3e;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 20px;
+
+  &:hover {
+    background-color: #c53030;
+    transform: translateY(-1px);
+  }
+}
+</file>
+
+<file path="frontend/src/app/components/profile-page/profile-page.component.ts">
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { DeviceService } from '../../services/device.service';
+import { Device } from '../../models/device.model';
+import { CurrentUser } from '../../models/user.model';
+
+@Component({
+  selector: 'app-profile',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  templateUrl: './profile-page.component.html',
+  styleUrl: './profile-page.component.scss',
+})
+export class ProfileComponent implements OnInit {
+  currentUser: CurrentUser | null = null;
+  assignedDevices: Device[] = [];
+  isLoading = true;
+
+  constructor(
+    public authService: AuthService,
+    private deviceService: DeviceService,
+  ) {}
+
+  ngOnInit(): void {
+    this.authService.currentUser$.subscribe((user) => {
+      this.currentUser = user;
+    });
+
+    this.loadMyDevices();
+  }
+
+  private loadMyDevices(): void {
+    this.deviceService.getMyDevices().subscribe({
+      next: (devices) => {
+        this.assignedDevices = devices;
+        this.isLoading = false;
+
+        // Fallback: try to get name from first device if not available in currentUser
+        if (
+          !this.currentUser?.firstName &&
+          devices.length > 0 &&
+          devices[0].assignedUser
+        ) {
+          const u = devices[0].assignedUser;
+          this.currentUser = {
+            firstName: u.firstName,
+            lastName: u.lastName,
+            role: this.currentUser?.role,
+          };
+        }
+      },
+      error: () => (this.isLoading = false),
+    });
+  }
+
+  unassignDevice(deviceId: number): void {
+    if (confirm('Unassign this device?')) {
+      this.deviceService.unassignDevice(deviceId).subscribe({
+        next: () => this.loadMyDevices(),
+        error: () => alert('Failed to unassign'),
+      });
+    }
+  }
+
+  logout(): void {
+    this.authService.logout();
+  }
+}
+</file>
+
+<file path="frontend/src/app/config/api.config.ts">
+export const API_CONFIG = {
+  baseUrl: 'http://localhost:5246/api', // Change this once when you deploy
+};
+</file>
+
+<file path="frontend/src/app/models/user.model.ts">
+export interface AuthResponse {
+  isSuccess: boolean;
+  message: string;
+  role?: string;
+}
+
+export interface CurrentUser {
+  firstName: string;
+  lastName: string;
+  role?: string;
+}
+</file>
+
 <file path="backend/DeviceManager.Api/Controllers/AiController.cs">
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using DeviceManager.Api.Models; // This makes DeviceDto work!
+using DeviceManager.Api.DTOs; // This makes DeviceDto work!
 using DeviceManager.Api.Services;
 
 namespace DeviceManager.Api.Controllers;
@@ -206,109 +523,6 @@ public class AiController : ControllerBase
             return StatusCode(500, new { message = "AI Generation failed", details = ex.Message });
         }
     }
-}
-</file>
-
-<file path="backend/DeviceManager.Api/Service/AiService.cs">
-using System.Text;
-using System.Text.Json;
-using DeviceManager.Api.Models;
-
-namespace DeviceManager.Api.Services;
-
-public class AiService : AiServiceInterface
-{
-    private readonly HttpClient _httpClient;
-    private readonly IConfiguration _config;
-
-    public AiService(HttpClient httpClient, IConfiguration config)
-    {
-        _httpClient = httpClient;
-        _config = config;
-    }
-
-    public async Task<string> GenerateDescriptionAsync(DeviceDto specs)
-    {
-        var apiKey = _config["Gemini:ApiKey"];
-        var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={apiKey}";
-
-        // 1. Create the Prompt
-        var promptText = $"Write a concise, professional 2-sentence description for a device. " +
-                         $"Specs: {specs.Manufacturer} {specs.Name}, {specs.Processor}, {specs.RamAmount} RAM, " +
-                         $"running {specs.OperatingSystem}. Focus on its best use case.";
-
-        // 2. Build the Gemini-specific Request Object
-        var requestBody = new
-        {
-            contents = new[]
-            {
-                new { parts = new[] { new { text = promptText } } }
-            }
-        };
-
-        var jsonRequest = JsonSerializer.Serialize(requestBody);
-        var content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
-
-        // 3. Send to Google
-        // Inside AiService.cs
-      var response = await _httpClient.PostAsync(url, content);
-
-      if (!response.IsSuccessStatusCode)
-      {
-          // 💡 This is the secret to fixing the bug:
-          var errorBody = await response.Content.ReadAsStringAsync();
-          throw new Exception($"Google Error ({response.StatusCode}): {errorBody}");
-      }
-
-        var jsonResponse = await response.Content.ReadAsStringAsync();
-        
-        // 4. Parse the highly-nested Gemini Response
-        using var doc = JsonDocument.Parse(jsonResponse);
-        var description = doc.RootElement
-            .GetProperty("candidates")[0]
-            .GetProperty("content")
-            .GetProperty("parts")[0]
-            .GetProperty("text")
-            .GetString();
-
-        return description?.Trim() ?? "Could not generate description.";
-    }
-}
-</file>
-
-<file path="backend/DeviceManager.Api/Service/AiServiceInterface.cs">
-using DeviceManager.Api.DTOs; // Ensure your DTO namespace is correct
-using DeviceManager.Api.Models;
-
-namespace DeviceManager.Api.Services;
-public interface AiServiceInterface
-{
-    Task<string> GenerateDescriptionAsync(DeviceDto specs);
-}
-</file>
-
-<file path="frontend/src/app/services/ai.service.spec.ts">
-
-</file>
-
-<file path="frontend/src/app/services/ai.service.ts">
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Device } from '../models/device.model';
-import { Observable } from 'rxjs';
-
-@Injectable({ providedIn: 'root' })
-export class AiService {
-  private apiUrl = 'http://localhost:5246/api/ai'; // Match your API port!
-
-  constructor(private http: HttpClient) {}
-
-  generateDescription(device: any): Observable<{ description: string }> {
-    return this.http.post<{ description: string }>(
-      `${this.apiUrl}/generate-description`,
-      device,
-    );
-  }
 }
 </file>
 
@@ -1808,6 +2022,17 @@ namespace DeviceManager.Api.Migrations
 }
 </file>
 
+<file path="backend/DeviceManager.Api/Service/AiServiceInterface.cs">
+using DeviceManager.Api.DTOs; // Ensure your DTO namespace is correct
+using DeviceManager.Api.Models;
+
+namespace DeviceManager.Api.Services;
+public interface AiServiceInterface
+{
+    Task<string> GenerateDescriptionAsync(DeviceDto specs);
+}
+</file>
+
 <file path="backend/DeviceManager.Api/Service/AuthServiceInterface.cs">
 using DeviceManager.Api.DTOs;
 
@@ -1982,10 +2207,6 @@ describe('DeviceCreateComponent', () => {
     expect(component).toBeTruthy();
   });
 });
-</file>
-
-<file path="frontend/src/app/components/device-detail/device-detail.component.spec.ts">
-
 </file>
 
 <file path="frontend/src/app/components/device-edit/device-edit.component.scss">
@@ -3200,6 +3421,33 @@ export const authGuard: CanActivateFn = (route, state) => {
 };
 </file>
 
+<file path="frontend/src/app/services/ai.service.spec.ts">
+
+</file>
+
+<file path="frontend/src/app/services/ai.service.ts">
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Device } from '../models/device.model';
+import { Observable } from 'rxjs';
+import { API_CONFIG } from '../config/api.config';
+
+@Injectable({ providedIn: 'root' })
+export class AiService {
+  private apiUrl = `${API_CONFIG.baseUrl}/ai`;
+
+  constructor(private http: HttpClient) {}
+
+  generateDescription(device: any): Observable<{ description: string }> {
+    return this.http.post<{ description: string }>(
+      `${this.apiUrl}/generate-description`,
+      device,
+      { withCredentials: true },
+    );
+  }
+}
+</file>
+
 <file path="frontend/src/app/services/auth.service.spec.ts">
 
 </file>
@@ -3209,45 +3457,54 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { Router } from '@angular/router';
-
-// This interface matches your .NET AuthResponseDto exactly!
-export interface AuthResponse {
-  isSuccess: boolean;
-  message: string;
-  role?: string;
-}
+import { API_CONFIG } from '../config/api.config';
+import { AuthResponse, CurrentUser } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:5246/api/account';
-  private httpOptions = {
-    withCredentials: true,
-  };
+  private apiUrl = `${API_CONFIG.baseUrl}/account`;
 
-  // BehaviorSubject is like a live radio station broadcasting the user's role
-  private userRoleSubject = new BehaviorSubject<string | null>(
-    localStorage.getItem('userRole'),
-  );
+  private httpOptions = { withCredentials: true };
+
+  private userRoleSubject = new BehaviorSubject<string | null>(null);
   public userRole$ = this.userRoleSubject.asObservable();
+
+  private currentUserSubject = new BehaviorSubject<CurrentUser | null>(null);
+  public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(
     private http: HttpClient,
     private router: Router,
-  ) {}
+  ) {
+    // Load from localStorage on startup
+    const savedRole = localStorage.getItem('userRole');
+    const savedUser = localStorage.getItem('currentUser');
+
+    if (savedRole) this.userRoleSubject.next(savedRole);
+    if (savedUser) this.currentUserSubject.next(JSON.parse(savedUser));
+  }
 
   login(credentials: any): Observable<AuthResponse> {
     return this.http
       .post<AuthResponse>(`${this.apiUrl}/login`, credentials, {
-        withCredentials: true, // 🍪 CRITICAL: Tells Angular to accept and send the HttpOnly cookies!
+        withCredentials: true,
       })
       .pipe(
         tap((response) => {
-          // If login works, save the role so the UI knows who is in charge
           if (response.isSuccess && response.role) {
             localStorage.setItem('userRole', response.role);
             this.userRoleSubject.next(response.role);
+
+            // Save basic user info (we'll improve when backend returns names)
+            const user: CurrentUser = {
+              firstName: 'User',
+              lastName: '',
+              role: response.role,
+            };
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            this.currentUserSubject.next(user);
           }
         }),
       );
@@ -3256,63 +3513,40 @@ export class AuthService {
   register(userData: any): Observable<AuthResponse> {
     return this.http
       .post<AuthResponse>(`${this.apiUrl}/register`, userData, {
-        withCredentials: true, // 🍪 CRITICAL: Accepts the cookies generated during registration
+        withCredentials: true,
       })
       .pipe(
         tap((response) => {
-          // Because your .NET API automatically logs them in after a successful register,
-          // we save the role to instantly update the UI, just like the login method!
           if (response.isSuccess && response.role) {
             localStorage.setItem('userRole', response.role);
             this.userRoleSubject.next(response.role);
+
+            const user: CurrentUser = {
+              firstName: 'User',
+              lastName: '',
+              role: response.role,
+            };
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            this.currentUserSubject.next(user);
           }
         }),
       );
   }
-  logout(): void {
-    // 1. WIPE THE MEMORY IMMEDIATELY!
-    // Do this first so the Guard instantly locks down the app.
-    localStorage.removeItem('userRole');
-    this.userRoleSubject.next(null);
 
-    // 2. KICK THEM OUT IMMEDIATELY!
+  logout(): void {
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('currentUser');
+    this.userRoleSubject.next(null);
+    this.currentUserSubject.next(null);
     this.router.navigate(['/login']);
 
-    // 3. TELL THE SERVER TO KILL THE COOKIE IN THE BACKGROUND
-    // We don't care if this takes a second, or even if it fails. The frontend is already locked.
-    this.http.post(`${this.apiUrl}/logout`, {}, this.httpOptions).subscribe({
-      next: () => console.log('Secure cookies destroyed on the server.'),
-      error: (err) =>
-        console.error(
-          'Server logout failed, but frontend is still secure.',
-          err,
-        ),
-    });
+    this.http.post(`${this.apiUrl}/logout`, {}, this.httpOptions).subscribe();
   }
-  // --- Helper Methods for your UI Components ---
 
   isLoggedIn(): boolean {
-    return !!this.userRoleSubject.value; // True if a role exists
-  }
-
-  isAdmin(): boolean {
-    return this.userRoleSubject.value === 'Admin';
+    return !!this.userRoleSubject.value;
   }
 }
-</file>
-
-<file path="frontend/src/app/app.html">
-<header>
-  <h1>Device Management System</h1>
-</header>
-
-<main>
-  <router-outlet></router-outlet>
-</main>
-
-<footer>
-  <p>© 2026 - My Lab Manager</p>
-</footer>
 </file>
 
 <file path="frontend/src/app/app.spec.ts">
@@ -3339,21 +3573,6 @@ describe('App', () => {
     expect(compiled.querySelector('h1')?.textContent).toContain('Hello, frontend');
   });
 });
-</file>
-
-<file path="frontend/src/app/app.ts">
-import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-
-@Component({
-  selector: 'app-root',
-  imports: [RouterOutlet],
-  templateUrl: './app.html',
-  styleUrl: './app.scss'
-})
-export class App {
-  protected readonly title = signal('frontend');
-}
 </file>
 
 <file path="frontend/src/index.html">
@@ -3739,87 +3958,9 @@ appsettings.Development.json
 }
 </file>
 
-<file path="codebase.txt">
-
-</file>
-
 <file path="README.md">
 # Device-Management-System
 GRADUATE SOFTWARE ENGINEER – PROJECT TASK
-</file>
-
-<file path="backend/DeviceManager.Api/Controllers/AccountController.cs">
-using Microsoft.AspNetCore.Mvc;
-using DeviceManager.Api.Services;
-using DeviceManager.Api.DTOs;
-
-namespace DeviceManager.Api.Controllers;
-
-[ApiController]
-[Route("api/account")]
-public class AccountController : ControllerBase
-{
-    private readonly AuthServiceInterface _authService;
-
-    public AccountController(AuthServiceInterface authService) => _authService = authService;
-
-    private void SetTokenCookies(string accessToken, string refreshToken)
-    {
-        var cookieOptions = new CookieOptions
-        {
-            HttpOnly = true, 
-            Secure = true, // Set to false if testing without HTTPS, true for Production
-            SameSite = SameSiteMode.Strict, 
-            Expires = DateTime.UtcNow.AddDays(7)
-        };
-
-        Response.Cookies.Append("AccessToken", accessToken, cookieOptions);
-        Response.Cookies.Append("RefreshToken", refreshToken, cookieOptions);
-    }
-
-    [HttpPost("register")]
-    public async Task<IActionResult> Register(RegisterDto model)
-    {
-        var (result, accessToken, refreshToken) = await _authService.RegisterAsync(model);
-        if (!result.IsSuccess) return BadRequest(result);
-
-        SetTokenCookies(accessToken!, refreshToken!);
-        return Ok(result); 
-    }
-
-    [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginDto model)
-    {
-        var (result, accessToken, refreshToken) = await _authService.LoginAsync(model);
-        if (!result.IsSuccess) return Unauthorized(result);
-
-        SetTokenCookies(accessToken!, refreshToken!);
-        return Ok(result);
-    }
-
-    [HttpPost("refresh")]
-    public async Task<IActionResult> Refresh()
-    {
-        var oldRefreshToken = Request.Cookies["RefreshToken"];
-        if (string.IsNullOrEmpty(oldRefreshToken)) return Unauthorized("No refresh token found.");
-
-        var (result, newAccessToken, newRefreshToken) = await _authService.RefreshTokenAsync(oldRefreshToken);
-        if (!result.IsSuccess) return Unauthorized(result);
-
-        SetTokenCookies(newAccessToken!, newRefreshToken!);
-        return Ok(result);
-    }
-
-    [HttpPost("logout")]
-    public IActionResult Logout()
-    {
-        // This tells the browser to instantly expire and delete the secure cookies
-        Response.Cookies.Delete("AccessToken");
-        Response.Cookies.Delete("RefreshToken");
-        
-        return Ok(new { message = "Logged out successfully" });
-    }
-}
 </file>
 
 <file path="backend/DeviceManager.Api/Dtos/AuthDtos.cs">
@@ -4253,6 +4394,90 @@ public class ApplicationUser : IdentityUser
 }
 </file>
 
+<file path="backend/DeviceManager.Api/Service/AiService.cs">
+using System.Text;
+using System.Text.Json;
+using DeviceManager.Api.DTOs;
+
+namespace DeviceManager.Api.Services;
+
+public class AiService : AiServiceInterface
+{
+    private readonly HttpClient _httpClient;
+    private readonly IConfiguration _config;
+
+    public AiService(HttpClient httpClient, IConfiguration config)
+    {
+        _httpClient = httpClient;
+        _config = config;
+    }
+
+public async Task<string> GenerateDescriptionAsync(DeviceDto specs)
+{
+    var apiKey = _config["Gemini:ApiKey"];
+    if (string.IsNullOrEmpty(apiKey))
+        throw new Exception("Gemini API key is missing in appsettings.json");
+
+    // Best stable model right now
+    var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={apiKey}";
+
+    var promptText = $"Write a concise, professional 2-sentence description for a device. " +
+                     $"Specs: {specs.Manufacturer} {specs.Name}, {specs.Processor}, {specs.RamAmount} RAM, " +
+                     $"running {specs.OperatingSystem}. Focus on its best use case.";
+
+    var requestBody = new
+    {
+        contents = new[]
+        {
+            new { parts = new[] { new { text = promptText } } }
+        }
+    };
+
+    var jsonRequest = JsonSerializer.Serialize(requestBody);
+    var content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
+
+    var response = await _httpClient.PostAsync(url, content);
+
+    var jsonResponse = await response.Content.ReadAsStringAsync();
+
+    if (!response.IsSuccessStatusCode)
+    {
+        throw new Exception($"Google Error ({response.StatusCode}): {jsonResponse}");
+    }
+
+    // Safer parsing with null checks and safety filter handling
+    using var doc = JsonDocument.Parse(jsonResponse);
+    var root = doc.RootElement;
+
+    if (root.TryGetProperty("candidates", out var candidates) && candidates.GetArrayLength() > 0)
+    {
+        var candidate = candidates[0];
+
+        // Handle blocked responses (very common)
+        if (candidate.TryGetProperty("finishReason", out var finishReason))
+        {
+            var reason = finishReason.GetString();
+            if (reason == "SAFETY" || reason == "RECITATION" || reason == "BLOCKLIST")
+            {
+                return "AI generation was blocked by safety filters. Try changing the device specs slightly.";
+            }
+        }
+
+        // Normal successful response
+        if (candidate.TryGetProperty("content", out var contentProp) &&
+            contentProp.TryGetProperty("parts", out var parts) &&
+            parts.GetArrayLength() > 0)
+        {
+            var text = parts[0].GetProperty("text").GetString();
+            return text?.Trim() ?? "Could not generate description.";
+        }
+    }
+
+    return "Could not generate description. Please try again with different specs.";
+}
+}
+</file>
+
 <file path="backend/DeviceManager.Api/Service/AuthService.cs">
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -4552,36 +4777,6 @@ public class DeviceService : DeviceServiceInterface
 }
 </file>
 
-<file path="backend/DeviceManager.Api/Service/DeviceServiceInterface.cs">
-using DeviceManager.Api.Models;
-
-namespace DeviceManager.Api.Services;
-
-public interface DeviceServiceInterface
-{
-    // ==========================================
-    // ZONE 1: NORMAL USER METHODS
-    // ==========================================
-    Task<IEnumerable<Device>> GetDevicesByUserIdAsync(string userId);
-    Task AssignDeviceAsync(int deviceId, string userId);
-    Task UnassignDeviceAsync(int deviceId, string userId);
-
-    // ==========================================
-    //  ZONE 2: ADMIN ONLY METHODS
-    // ==========================================
-    Task<IEnumerable<Device>> GetAllDevicesAsync();
-    Task<Device?> GetDeviceByIdAsync(int id);
-    Task<Device> CreateDeviceAsync(DeviceDto deviceDto);
-    Task<Device?> UpdateDeviceAsync(int id, DeviceDto deviceDto);
-    Task<bool> DeleteDeviceAsync(int id);
-    
-    // ==========================================
-    // UTILITY METHODS
-    // ==========================================
-    Task<bool> CheckSerialNumberExistsAsync(string serialNumber, int? excludeDeviceId = null);
-}
-</file>
-
 <file path="frontend/src/app/components/device-create/device-create.component.scss">
 $primary-blue: #3182ce;
 $error-red: #e53e3e;
@@ -4857,296 +5052,8 @@ export class DeviceCreateComponent {
 }
 </file>
 
-<file path="frontend/src/app/components/device-detail/device-detail.component.scss">
-.detail-container {
-  padding: 40px;
-  max-width: 900px;
-  margin: 0 auto;
+<file path="frontend/src/app/components/device-detail/device-detail.component.spec.ts">
 
-  .card {
-    background: white;
-    padding: 40px;
-    border-radius: 16px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
-  }
-
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 20px;
-
-    h1 {
-      margin: 0;
-      font-size: 2rem;
-      color: #1a202c;
-    }
-
-    .subtitle {
-      margin: 5px 0 0;
-      color: #718096;
-      font-size: 1.1rem;
-    }
-  }
-
-  // NEW: This container holds the badge and the button on the right
-  .header-right {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end; // Keeps everything flushed to the right
-    gap: 12px; // Space between the badge and the button
-  }
-
-  .status-badge {
-    background: #ebf8ff;
-    color: #2b6cb0;
-    padding: 6px 16px;
-    border-radius: 99px;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-  }
-
-  // NEW: Styled to match your "Enterprise Blue" theme
-  .update-btn {
-    background-color: #3182ce;
-    color: white;
-    padding: 8px 18px;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 6px rgba(49, 130, 206, 0.1);
-
-    &:hover {
-      background-color: #2b6cb0;
-      transform: translateY(-2px); // Matches your back-link animation
-      box-shadow: 0 6px 12px rgba(49, 130, 206, 0.2);
-    }
-
-    &:active {
-      transform: translateY(0);
-      background-color: #2c5282;
-    }
-  }
-
-  .specs-section {
-    margin-top: 30px;
-
-    h3 {
-      font-size: 1rem;
-      color: #4a5568;
-      border-bottom: 1px solid #edf2f7;
-      padding-bottom: 10px;
-      margin-bottom: 15px;
-    }
-  }
-
-  .specs-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 25px;
-  }
-
-  label {
-    display: block;
-    font-size: 0.7rem;
-    color: #a0aec0;
-    text-transform: uppercase;
-    font-weight: bold;
-    margin-bottom: 4px;
-  }
-
-  p {
-    margin: 0;
-    font-size: 1rem;
-    color: #2d3748;
-  }
-
-  .description-text {
-    line-height: 1.6;
-    color: #4a5568;
-    background: #f7fafc;
-    padding: 15px;
-    border-radius: 8px;
-  }
-
-  .back-link {
-    line-height: 1.6;
-    color: #4a5568;
-    background: #f7fafc;
-    padding: 12px 20px;
-    border-radius: 8px;
-    margin-top: 20px;
-    margin-left: auto;
-    width: fit-content;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: 1px solid #e2e8f0;
-    display: block;
-    text-decoration: none; // If using as a link
-
-    &:hover {
-      background-color: #edf2f7;
-      border-color: #cbd5e0;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    }
-
-    &:active {
-      transform: translateY(0);
-    }
-  }
-  .description-section {
-    max-width: 800px;
-    margin-top: 2rem;
-    font-family: "Inter", sans-serif;
-
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-
-      h5 {
-        font-weight: 600;
-        color: #334155;
-        margin: 0;
-      }
-    }
-  }
-
-  // ✨ The Magic Button
-  .btn-ai-magic {
-    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(168, 85, 247, 0.2);
-
-    &:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 15px rgba(168, 85, 247, 0.3);
-    }
-
-    &:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-    }
-  }
-
-  // 🖋️ The Main Textarea
-  .modern-textarea {
-    width: 100%;
-    min-height: 120px;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 15px;
-    font-size: 1rem;
-    line-height: 1.6;
-    color: #1e293b;
-    resize: vertical;
-    background-color: #ffffff;
-    transition: border-color 0.2s;
-
-    &:focus {
-      outline: none;
-      border-color: #6366f1;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-    }
-  }
-
-  // 🔮 The AI Suggestion Card
-  .ai-card-overlay {
-    margin-top: 1.5rem;
-    background: #f8fafc;
-    border: 1px solid #ddd6fe;
-    border-left: 5px solid #8b5cf6;
-    border-radius: 12px;
-    overflow: hidden;
-    animation: slideIn 0.3s ease-out;
-
-    .ai-card-header {
-      padding: 10px 15px;
-      display: flex;
-      justify-content: space-between;
-      background: #f5f3ff;
-
-      .ai-badge {
-        font-size: 0.7rem;
-        font-weight: 800;
-        letter-spacing: 1px;
-        color: #7c3aed;
-      }
-
-      .btn-close-small {
-        border: none;
-        background: none;
-        font-size: 1.2rem;
-        color: #94a3b8;
-        cursor: pointer;
-      }
-    }
-
-    .ai-card-body {
-      padding: 15px;
-      p {
-        margin: 0;
-        font-style: italic;
-        color: #4c1d95;
-        font-size: 1rem;
-      }
-    }
-
-    .ai-card-footer {
-      padding: 10px 15px;
-      display: flex;
-      gap: 10px;
-
-      .btn-apply {
-        background: #7c3aed;
-        color: white;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 6px;
-        font-size: 0.9rem;
-        cursor: pointer;
-        &:hover {
-          background: #6d28d9;
-        }
-      }
-
-      .btn-discard {
-        background: transparent;
-        color: #64748b;
-        border: 1px solid #e2e8f0;
-        padding: 6px 12px;
-        border-radius: 6px;
-        font-size: 0.9rem;
-        cursor: pointer;
-        &:hover {
-          background: #f1f5f9;
-        }
-      }
-    }
-  }
-
-  @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-}
 </file>
 
 <file path="frontend/src/app/components/device-edit/device-edit.component.html">
@@ -5413,61 +5320,48 @@ export const appConfig: ApplicationConfig = {
 };
 </file>
 
-<file path="frontend/src/app/app.scss">
-// Reuse the same professional color palette
-$primary-blue: #3182ce;
-$bg-gray: #f7fafc;
-$text-dark: #2d3748;
-$border-color: #e2e8f0;
+<file path="frontend/src/app/app.html">
+<header>
+  <h1>Device Management System</h1>
 
-:host {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh; // Forces footer to the bottom
-  background-color: $bg-gray;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-}
+  <div class="header-right">
+    <button
+      *ngIf="authService.isLoggedIn()"
+      (click)="logout()"
+      class="logout-btn"
+    >
+      Logout
+    </button>
+  </div>
+</header>
 
-header {
-  background-color: white;
-  border-bottom: 1px solid $border-color;
-  padding: 1.5rem 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+<main>
+  <router-outlet></router-outlet>
+</main>
 
-  h1 {
-    max-width: 900px;
-    margin-left: 0 auto;
-    padding: 0 20px;
-    color: $text-dark;
-    font-size: 1.5rem;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    text-align: left;
+<footer>
+  <p>© 2026 - My Lab Manager</p>
+</footer>
+</file>
 
-    // Optional: Add a small blue accent bar next to the title
-    border-left: 4px solid $primary-blue;
-  }
-}
+<file path="frontend/src/app/app.ts">
+import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { AuthService } from './services/auth.service'; // ← added
 
-main {
-  flex: 1; // This pushes the footer down if the content is short
-  padding: 20px 0;
-  // This ensures the router-outlet content is centered
-}
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [RouterOutlet, CommonModule], // ← added CommonModule for *ngIf
+  templateUrl: './app.html',
+  styleUrl: './app.scss',
+})
+export class App {
+  constructor(public authService: AuthService) {} // ← public so template can access it
 
-footer {
-  background-color: white;
-  border-top: 1px solid $border-color;
-  padding: 1.5rem 0;
-  margin-top: 40px;
-
-  p {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 0 20px;
-    color: #a0aec0;
-    font-size: 0.85rem;
-    text-align: center;
+  logout(): void {
+    this.authService.logout();
   }
 }
 </file>
@@ -5534,82 +5428,110 @@ Global
 EndGlobal
 </file>
 
-<file path="backend/DeviceManager.Api/Dtos/DeviceDto.cs">
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+<file path="backend/DeviceManager.Api/Controllers/AccountController.cs">
+using Microsoft.AspNetCore.Mvc;
+using DeviceManager.Api.Services;
+using DeviceManager.Api.DTOs;
 
-namespace DeviceManager.Api.Models;
+namespace DeviceManager.Api.Controllers;
 
-public class DeviceDto
+[ApiController]
+[Route("api/account")]
+public class AccountController : ControllerBase
 {
-  [Required(ErrorMessage = "Serial Number is mandatory")]
-  [StringLength(50)]
-  public string SerialNumber { get; set; } = string.Empty;
+    private readonly AuthServiceInterface _authService;
 
-  [Required(ErrorMessage = "Name is mandatory")]
-  public string Name { get; set; } = string.Empty;
+    public AccountController(AuthServiceInterface authService) => _authService = authService;
 
-  [Required(ErrorMessage = "Manufacturer is mandatory")]
-  public string Manufacturer { get; set; } = string.Empty;
+   private void SetTokenCookies(string accessToken, string refreshToken)
+    {
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = false,           // ← Set to true in production (HTTPS)
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTime.UtcNow.AddMinutes(15)   // Access token short lived
+        };
 
-  [Required]
-  [RegularExpression("^(Phone|Tablet)$",
-      ErrorMessage = "Type must be 'Phone' or 'Tablet'")]
-  public string Type { get; set; } = string.Empty;
+        Response.Cookies.Append("AccessToken", accessToken, cookieOptions);
 
-  [Required]
-  public string OperatingSystem { get; set; } = string.Empty;
+        cookieOptions.Expires = DateTime.UtcNow.AddDays(7); // Refresh token longer
+        Response.Cookies.Append("RefreshToken", refreshToken, cookieOptions);
+    }
 
-  [Required]
-  public string OsVersion { get; set; } = string.Empty;
+    [HttpPost("register")]
+    public async Task<IActionResult> Register(RegisterDto model)
+    {
+        var (result, accessToken, refreshToken) = await _authService.RegisterAsync(model);
+        if (!result.IsSuccess) return BadRequest(result);
 
-  [Required]
-  public string Processor { get; set; } = string.Empty;
+        SetTokenCookies(accessToken!, refreshToken!);
+        return Ok(result); 
+    }
 
-  [Required]
-  // This Regex ensures it ends in 'GB' and the number is 1-3 digits
-  [RegularExpression(@"^([1-9]|[1-9][0-9]|[1-4][0-9][0-9]|512)GB$",
-      ErrorMessage = "RAM must be between 1GB and 512GB (e.g., '16GB')")]
-  public string RamAmount { get; set; } = string.Empty;
+    [HttpPost("login")]
+    public async Task<IActionResult> Login(LoginDto model)
+    {
+        var (result, accessToken, refreshToken) = await _authService.LoginAsync(model);
+        if (!result.IsSuccess) return Unauthorized(result);
 
-  [Required]
-  public string Description { get; set; } = string.Empty;
+        SetTokenCookies(accessToken!, refreshToken!);
+        return Ok(result);
+    }
 
-  [Required]
-  [RegularExpression("^(Available|Unavailable|In Service|In Use)$",
-      ErrorMessage = "Status must be: Available, Unavailable, In Service, or In Use")]
-  public string Status { get; set; } = "Available";
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh()
+    {
+        var oldRefreshToken = Request.Cookies["RefreshToken"];
+        if (string.IsNullOrEmpty(oldRefreshToken)) return Unauthorized("No refresh token found.");
 
+        var (result, newAccessToken, newRefreshToken) = await _authService.RefreshTokenAsync(oldRefreshToken);
+        if (!result.IsSuccess) return Unauthorized(result);
 
-  // The ID of the user
-    public string? AssignedUserId { get; set; }
+        SetTokenCookies(newAccessToken!, newRefreshToken!);
+        return Ok(result);
+    }
 
-    // The actual User object
-    [ForeignKey("AssignedUserId")]
-    public virtual ApplicationUser? AssignedUser { get; set; } // 'virtual' helps EF load it
+    [HttpPost("logout")]
+    public IActionResult Logout()
+    {
+        // This tells the browser to instantly expire and delete the secure cookies
+        Response.Cookies.Delete("AccessToken");
+        Response.Cookies.Delete("RefreshToken");
+        
+        return Ok(new { message = "Logged out successfully" });
+    }
 }
 </file>
 
-<file path="backend/DeviceManager.Api/appsettings.json">
+<file path="backend/DeviceManager.Api/Service/DeviceServiceInterface.cs">
+using DeviceManager.Api.DTOs;
+using DeviceManager.Api.Models;
+
+namespace DeviceManager.Api.Services;
+
+public interface DeviceServiceInterface
 {
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft.AspNetCore": "Warning"
-    }
-  },
-  "AllowedHosts": "*",
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost,1433;Database=DeviceDb;User Id=sa;Password=REDACTED_DB_PASSWORD;TrustServerCertificate=True;"
-  },
-  "Jwt": {
-    "Key": "REDACTED_JWT_SECRET_KEY",
-    "Issuer": "DeviceManager.Api",
-    "Audience": "DeviceManager.Angular"
-  },
-  "Gemini": {
-    "ApiKey": "REDACTED_GEMINI_KEY"
-  }
+    // ==========================================
+    // ZONE 1: NORMAL USER METHODS
+    // ==========================================
+    Task<IEnumerable<Device>> GetDevicesByUserIdAsync(string userId);
+    Task AssignDeviceAsync(int deviceId, string userId);
+    Task UnassignDeviceAsync(int deviceId, string userId);
+
+    // ==========================================
+    //  ZONE 2: ADMIN ONLY METHODS
+    // ==========================================
+    Task<IEnumerable<Device>> GetAllDevicesAsync();
+    Task<Device?> GetDeviceByIdAsync(int id);
+    Task<Device> CreateDeviceAsync(DeviceDto deviceDto);
+    Task<Device?> UpdateDeviceAsync(int id, DeviceDto deviceDto);
+    Task<bool> DeleteDeviceAsync(int id);
+    
+    // ==========================================
+    // UTILITY METHODS
+    // ==========================================
+    Task<bool> CheckSerialNumberExistsAsync(string serialNumber, int? excludeDeviceId = null);
 }
 </file>
 
@@ -5907,157 +5829,293 @@ GO
 </div>
 </file>
 
-<file path="frontend/src/app/components/device-detail/device-detail.component.html">
-<div class="detail-container" *ngIf="device">
-  <div class="card">
-    <div class="header">
-      <div>
-        <h1>{{ device.name }}</h1>
-        <p class="subtitle">{{ device.manufacturer }} | {{ device.type }}</p>
-      </div>
+<file path="frontend/src/app/components/device-detail/device-detail.component.scss">
+.detail-container {
+  padding: 40px;
+  max-width: 900px;
+  margin: 0 auto;
 
-      <div class="header-right">
-        <span class="status-badge">{{ device.status }}</span>
-
-        <button
-          *ngIf="authService.isAdmin()"
-          class="update-btn"
-          [routerLink]="['/devices', device.id, 'edit']"
-        >
-          Update Device
-        </button>
-      </div>
-    </div>
-
-    <hr />
-
-    <div class="specs-section">
-      <h3><i class="icon"></i> Hardware</h3>
-      <div class="specs-grid">
-        <div class="spec-item">
-          <label>Processor</label>
-          <p>{{ device.processor }}</p>
-        </div>
-        <div class="spec-item">
-          <label>RAM</label>
-          <p>{{ device.ramAmount }}</p>
-        </div>
-        <div class="spec-item">
-          <label>Serial Number</label>
-          <p>
-            <code>{{ device.serialNumber }}</code>
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <div class="specs-section">
-      <h3><i class="icon"></i> Software & System</h3>
-      <div class="specs-grid">
-        <div class="spec-item">
-          <label>Operating System</label>
-          <p>{{ device.operatingSystem }} (v{{ device.osVersion }})</p>
-        </div>
-        <div class="spec-item">
-          <label>Date Added</label>
-          <p>{{ device.dateAdded | date: "mediumDate" }}</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="specs-section">
-      <h3><i class="icon"></i> Description</h3>
-      <p class="description-text">{{ device.description }}</p>
-    </div>
-    <div class="d-flex justify-content-end mb-3">
-      <button
-        type="button"
-        class="btn-ai-magic"
-        (click)="generateAIContent()"
-        [disabled]="isAiLoading"
-      >
-        {{ isAiLoading ? "Thinking..." : "✨ Get AI Suggestion" }}
-      </button>
-    </div>
-
-    <div *ngIf="showAiPreview" class="ai-card-overlay">
-      <div class="ai-card-header">
-        <span class="ai-badge">AI SUGGESTION</span>
-        <button
-          type="button"
-          class="btn-close-small"
-          (click)="closeAiPreview()"
-        >
-          ×
-        </button>
-      </div>
-
-      <div class="ai-card-body">
-        <p>"{{ aiGeneratedDescription }}"</p>
-      </div>
-    </div>
-    <button class="back-link" routerLink="/devices">← Back to Inventory</button>
-  </div>
-</div>
-</file>
-
-<file path="frontend/src/app/components/device-detail/device-detail.component.ts">
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink, Router } from '@angular/router';
-import { DeviceService } from '../../services/device.service';
-import { Device } from '../../models/device.model';
-import { AuthService } from '../../services/auth.service';
-import { AiService } from '../../services/ai.service';
-import { FormsModule } from '@angular/forms';
-
-// ... imports ...
-@Component({
-  selector: 'app-device-detail',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
-  templateUrl: './device-detail.component.html',
-  styleUrl: './device-detail.component.scss',
-})
-export class DeviceDetailComponent implements OnInit {
-  device: Device | undefined;
-  aiGeneratedDescription: string = '';
-  showAiPreview: boolean = false;
-  isAiLoading: boolean = false;
-
-  constructor(
-    private route: ActivatedRoute,
-    private deviceService: DeviceService,
-    public authService: AuthService,
-    private aiService: AiService,
-  ) {}
-
-  generateAIContent() {
-    if (!this.device) return;
-    this.isAiLoading = true;
-
-    this.aiService.generateDescription(this.device).subscribe({
-      next: (res) => {
-        this.aiGeneratedDescription = res.description;
-        this.showAiPreview = true;
-        this.isAiLoading = false;
-      },
-      error: () => (this.isAiLoading = false),
-    });
+  .card {
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
   }
 
-  // Just closes the purple box
-  closeAiPreview() {
-    this.showAiPreview = false;
-    this.aiGeneratedDescription = '';
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+
+    h1 {
+      margin: 0;
+      font-size: 2rem;
+      color: #1a202c;
+    }
+
+    .subtitle {
+      margin: 5px 0 0;
+      color: #718096;
+      font-size: 1.1rem;
+    }
   }
 
-  ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    if (id) {
-      this.deviceService
-        .getDeviceById(id)
-        .subscribe((data) => (this.device = data));
+  // NEW: This container holds the badge and the button on the right
+  .header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; // Keeps everything flushed to the right
+    gap: 12px; // Space between the badge and the button
+  }
+
+  .status-badge {
+    background: #ebf8ff;
+    color: #2b6cb0;
+    padding: 6px 16px;
+    border-radius: 99px;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+  }
+
+  // NEW: Styled to match your "Enterprise Blue" theme
+  .update-btn {
+    background-color: #3182ce;
+    color: white;
+    padding: 8px 18px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px rgba(49, 130, 206, 0.1);
+
+    &:hover {
+      background-color: #2b6cb0;
+      transform: translateY(-2px); // Matches your back-link animation
+      box-shadow: 0 6px 12px rgba(49, 130, 206, 0.2);
+    }
+
+    &:active {
+      transform: translateY(0);
+      background-color: #2c5282;
+    }
+  }
+
+  .specs-section {
+    margin-top: 30px;
+
+    h3 {
+      font-size: 1rem;
+      color: #4a5568;
+      border-bottom: 1px solid #edf2f7;
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+    }
+  }
+
+  .specs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+  }
+
+  label {
+    display: block;
+    font-size: 0.7rem;
+    color: #a0aec0;
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 1rem;
+    color: #2d3748;
+  }
+
+  .description-text {
+    line-height: 1.6;
+    color: #4a5568;
+    background: #f7fafc;
+    padding: 15px;
+    border-radius: 8px;
+  }
+
+  .back-link {
+    line-height: 1.6;
+    color: #4a5568;
+    background: #f7fafc;
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+    margin-left: auto;
+    width: fit-content;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid #e2e8f0;
+    display: block;
+    text-decoration: none; // If using as a link
+
+    &:hover {
+      background-color: #edf2f7;
+      border-color: #cbd5e0;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+  .description-section {
+    max-width: 800px;
+    margin-top: 2rem;
+    font-family: "Inter", sans-serif;
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+
+      h5 {
+        font-weight: 600;
+        color: #334155;
+        margin: 0;
+      }
+    }
+  }
+
+  // ✨ The Magic Button
+  .btn-ai-magic {
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(168, 85, 247, 0.2);
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(168, 85, 247, 0.3);
+    }
+
+    &:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+  }
+
+  // 🖋️ The Main Textarea
+  .modern-textarea {
+    width: 100%;
+    min-height: 120px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 15px;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #1e293b;
+    resize: vertical;
+    background-color: #ffffff;
+    transition: border-color 0.2s;
+
+    &:focus {
+      outline: none;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+  }
+
+  // 🔮 The AI Suggestion Card
+  .ai-card-overlay {
+    margin-top: 1.5rem;
+    background: #f8fafc;
+    border: 1px solid #ddd6fe;
+    border-left: 5px solid #8b5cf6;
+    border-radius: 12px;
+    overflow: hidden;
+    animation: slideIn 0.3s ease-out;
+
+    .ai-card-header {
+      padding: 10px 15px;
+      display: flex;
+      justify-content: space-between;
+      background: #f5f3ff;
+
+      .ai-badge {
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 1px;
+        color: #7c3aed;
+      }
+
+      .btn-close-small {
+        border: none;
+        background: none;
+        font-size: 1.2rem;
+        color: #94a3b8;
+        cursor: pointer;
+      }
+    }
+
+    .ai-card-body {
+      padding: 15px;
+      p {
+        margin: 0;
+        font-style: italic;
+        color: #4c1d95;
+        font-size: 1rem;
+      }
+    }
+
+    .ai-card-footer {
+      padding: 10px 15px;
+      display: flex;
+      gap: 10px;
+
+      .btn-apply {
+        background: #7c3aed;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        &:hover {
+          background: #6d28d9;
+        }
+      }
+
+      .btn-discard {
+        background: transparent;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        &:hover {
+          background: #f1f5f9;
+        }
+      }
+    }
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 }
@@ -6476,11 +6534,487 @@ export class DeviceListComponent implements OnInit {
 }
 </file>
 
+<file path="frontend/src/app/app.scss">
+// Reuse the same professional color palette
+$primary-blue: #3182ce;
+$bg-gray: #f7fafc;
+$text-dark: #2d3748;
+$border-color: #e2e8f0;
+$error-red: #e53e3e; // Added for logout button
+
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: $bg-gray;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+header {
+  background-color: white;
+  border-bottom: 1px solid $border-color;
+  padding: 1.5rem 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  position: relative; // Needed for absolute positioning of logout button
+
+  h1 {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px;
+    color: $text-dark;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    text-align: left;
+    border-left: 4px solid $primary-blue;
+  }
+
+  .header-right {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}
+
+main {
+  flex: 1;
+  padding: 20px 0;
+}
+
+footer {
+  background-color: white;
+  border-top: 1px solid $border-color;
+  padding: 1.5rem 0;
+  margin-top: 40px;
+
+  p {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px;
+    color: #a0aec0;
+    font-size: 0.85rem;
+    text-align: center;
+  }
+}
+
+// Logout button - matches your professional style
+.logout-btn {
+  padding: 8px 20px;
+  background-color: $error-red;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: darken($error-red, 8%);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+</file>
+
+<file path="backend/DeviceManager.Api/Data/AppDbContext.cs">
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore; 
+using Microsoft.EntityFrameworkCore;
+using DeviceManager.Api.Models;
+
+namespace DeviceManager.Api.Data;
+
+public class AppDbContext : IdentityDbContext<ApplicationUser>
+{
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+    {
+    }
+
+   
+    public DbSet<Device> Devices { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        // CRITICAL: This base call configures all the security tables (AspNetUsers, etc.)
+        // It MUST stay right here before your custom configurations.
+        base.OnModelCreating(modelBuilder);
+
+        // Your existing custom mappings stay exactly as they were!
+        modelBuilder.Entity<Device>(entity =>
+        {
+            entity.ToTable("Devices");
+            entity.Property(e => e.OperatingSystem).HasColumnName("OperatingSystem");
+            entity.Property(e => e.OsVersion).HasColumnName("OSversion");
+            entity.Property(e => e.RamAmount).HasColumnName("RAMamount");
+        });
+    }
+}
+</file>
+
+<file path="backend/DeviceManager.Api/Dtos/DeviceDto.cs">
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using DeviceManager.Api.Models;
+namespace DeviceManager.Api.DTOs;
+
+public class DeviceDto
+{
+    [Required(ErrorMessage = "Serial Number is mandatory")]
+    [StringLength(50)]
+    public string SerialNumber { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Name is mandatory")]
+    public string Name { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Manufacturer is mandatory")]
+    public string Manufacturer { get; set; } = string.Empty;
+
+    [Required]
+    [RegularExpression("^(Phone|Tablet)$",
+        ErrorMessage = "Type must be 'Phone' or 'Tablet'")]
+    public string Type { get; set; } = string.Empty;
+
+    [Required]
+    public string OperatingSystem { get; set; } = string.Empty;
+
+    [Required]
+    public string OsVersion { get; set; } = string.Empty;
+
+    [Required]
+    public string Processor { get; set; } = string.Empty;
+
+    [Required]
+    [RegularExpression(@"^([1-9]|[1-9][0-9]|[1-4][0-9][0-9]|512)GB$",
+        ErrorMessage = "RAM must be between 1GB and 512GB (e.g., '16GB')")]
+    public string RamAmount { get; set; } = string.Empty;
+
+    [Required]
+    public string Description { get; set; } = string.Empty;
+
+    [Required]
+    [RegularExpression("^(Available|Unavailable|In Service|In Use)$",
+        ErrorMessage = "Status must be: Available, Unavailable, In Service, or In Use")]
+    public string Status { get; set; } = "Available";
+
+    public string? AssignedUserId { get; set; }
+
+    [ForeignKey("AssignedUserId")]
+    public virtual ApplicationUser? AssignedUser { get; set; }
+}
+</file>
+
+<file path="backend/DeviceManager.Api/Models/Device.cs">
+namespace DeviceManager.Api.Models;
+
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+
+[Index(nameof(SerialNumber), IsUnique = true)] // Database-level uniqueness
+public class Device
+{
+  [Key]
+  public int Id { get; set; }
+
+  [Required]
+  public string SerialNumber { get; set; } = string.Empty;
+  public string Name { get; set; } = string.Empty;
+
+  public string Manufacturer { get; set; } = string.Empty;
+
+  //only phone or tablet
+  public string Type { get; set; } = string.Empty;
+
+  public string OperatingSystem { get; set; } = string.Empty;
+
+  public string OsVersion { get; set; } = string.Empty;
+
+  public string Processor { get; set; } = string.Empty;
+
+  public string RamAmount { get; set; } = string.Empty;
+
+  public string Description { get; set; } = string.Empty;
+
+  public string Status { get; set; } = "Available";
+
+  public DateTime DateAdded { get; set; } = DateTime.UtcNow;
+
+public string? AssignedUserId { get; set; }
+
+[ForeignKey("AssignedUserId")]
+public virtual ApplicationUser? AssignedUser { get; set; } // Must have 'virtual'!
+}
+</file>
+
+<file path="backend/DeviceManager.Api/appsettings.json">
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost,1433;Database=DeviceDb;User Id=sa;Password=REDACTED_DB_PASSWORD;TrustServerCertificate=True;"
+  },
+  "Jwt": {
+    "Key": "REDACTED_JWT_SECRET_KEY",
+    "Issuer": "DeviceManager.Api",
+    "Audience": "DeviceManager.Angular"
+  },
+  "Gemini": {
+    "ApiKey": "REDACTED_GEMINI_KEY"
+  },
+
+  "AdminSettings": {
+    "Email": "YOUR_ADMIN_EMAIL_HERE",
+    "Password": "YOUR_ADMIN_PASSWORD_HERE"
+  }
+}
+</file>
+
+<file path="frontend/src/app/components/device-detail/device-detail.component.html">
+<div class="detail-container" *ngIf="device">
+  <div class="card">
+    <div class="header">
+      <div>
+        <h1>{{ device.name }}</h1>
+        <p class="subtitle">{{ device.manufacturer }} | {{ device.type }}</p>
+      </div>
+
+      <div class="header-right">
+        <span class="status-badge">{{ device.status }}</span>
+
+        <button
+          *ngIf="authService.isAdmin()"
+          class="update-btn"
+          [routerLink]="['/devices', device.id, 'edit']"
+        >
+          Update Device
+        </button>
+      </div>
+    </div>
+
+    <hr />
+
+    <div class="specs-section">
+      <h3><i class="icon"></i> Hardware</h3>
+      <div class="specs-grid">
+        <div class="spec-item">
+          <label>Processor</label>
+          <p>{{ device.processor }}</p>
+        </div>
+        <div class="spec-item">
+          <label>RAM</label>
+          <p>{{ device.ramAmount }}</p>
+        </div>
+        <div class="spec-item">
+          <label>Serial Number</label>
+          <p>
+            <code>{{ device.serialNumber }}</code>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="specs-section">
+      <h3><i class="icon"></i> Software & System</h3>
+      <div class="specs-grid">
+        <div class="spec-item">
+          <label>Operating System</label>
+          <p>{{ device.operatingSystem }} (v{{ device.osVersion }})</p>
+        </div>
+        <div class="spec-item">
+          <label>Date Added</label>
+          <p>{{ device.dateAdded | date: "mediumDate" }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="specs-section">
+      <h3><i class="icon"></i> Description</h3>
+      <p class="description-text">{{ device.description }}</p>
+    </div>
+    <div class="d-flex justify-content-end mb-3">
+      <button
+        type="button"
+        class="btn-ai-magic"
+        (click)="generateAIContent()"
+        [disabled]="isAiLoading"
+      >
+        {{ isAiLoading ? "Thinking..." : "✨ Get AI Suggestion" }}
+      </button>
+    </div>
+
+    <div *ngIf="showAiPreview" class="ai-card-overlay">
+      <div class="ai-card-header">
+        <span class="ai-badge">AI SUGGESTION</span>
+        <button
+          type="button"
+          class="btn-close-small"
+          (click)="closeAiPreview()"
+        >
+          ×
+        </button>
+      </div>
+
+      <div class="ai-card-body">
+        <p>"{{ aiGeneratedDescription }}"</p>
+      </div>
+    </div>
+    <button class="back-link" routerLink="/devices">← Back to Inventory</button>
+  </div>
+</div>
+</file>
+
+<file path="frontend/src/app/components/device-detail/device-detail.component.ts">
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, RouterLink, Router } from '@angular/router';
+import { DeviceService } from '../../services/device.service';
+import { Device } from '../../models/device.model';
+import { AuthService } from '../../services/auth.service';
+import { AiService } from '../../services/ai.service';
+import { FormsModule } from '@angular/forms';
+
+// ... imports ...
+@Component({
+  selector: 'app-device-detail',
+  standalone: true,
+  imports: [CommonModule, RouterLink],
+  templateUrl: './device-detail.component.html',
+  styleUrl: './device-detail.component.scss',
+})
+export class DeviceDetailComponent implements OnInit {
+  device: Device | undefined;
+  aiGeneratedDescription: string = '';
+  showAiPreview: boolean = false;
+  isAiLoading: boolean = false;
+
+  constructor(
+    private route: ActivatedRoute,
+    private deviceService: DeviceService,
+    public authService: AuthService,
+    private aiService: AiService,
+  ) {}
+
+  generateAIContent() {
+    if (!this.device) return;
+    this.isAiLoading = true;
+
+    this.aiService.generateDescription(this.device).subscribe({
+      next: (res) => {
+        this.aiGeneratedDescription = res.description;
+        this.showAiPreview = true;
+        this.isAiLoading = false;
+      },
+      error: () => (this.isAiLoading = false),
+    });
+  }
+
+  // Just closes the purple box
+  closeAiPreview() {
+    this.showAiPreview = false;
+    this.aiGeneratedDescription = '';
+  }
+
+  ngOnInit(): void {
+    const id = Number(this.route.snapshot.paramMap.get('id'));
+    if (id) {
+      this.deviceService
+        .getDeviceById(id)
+        .subscribe((data) => (this.device = data));
+    }
+  }
+}
+</file>
+
+<file path="frontend/src/app/services/device.service.ts">
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { Device } from '../models/device.model';
+import { API_CONFIG } from '../config/api.config';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class DeviceService {
+  // Pointing directly to your Devices controller
+  private apiUrl = `${API_CONFIG.baseUrl}/devices`;
+
+  // CRITICAL: This tells Angular to send the secure Admin/User cookies with EVERY request
+  private httpOptions = {
+    withCredentials: true,
+  };
+
+  constructor(private http: HttpClient) {}
+
+  // Get all devices
+  getDevices(): Observable<Device[]> {
+    return this.http.get<Device[]>(this.apiUrl, this.httpOptions);
+  }
+
+  getDeviceById(id: number): Observable<Device> {
+    return this.http.get<Device>(`${this.apiUrl}/${id}`, this.httpOptions);
+  }
+
+  deleteDevice(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`, this.httpOptions);
+  }
+
+  createDevice(device: any): Observable<Device> {
+    return this.http.post<Device>(this.apiUrl, device, this.httpOptions);
+  }
+
+  updateDevice(id: number, device: any) {
+    return this.http.put(`${this.apiUrl}/${id}`, device, this.httpOptions);
+  }
+
+  checkSerialNumberExists(serialNumber: string): Observable<boolean> {
+    return this.http.get<boolean>(
+      `${this.apiUrl}/check-serial?sn=${serialNumber}`,
+      this.httpOptions,
+    );
+  }
+
+  // ==========================================
+  // NEW ASSIGNMENT METHODS
+  // ==========================================
+
+  assignDevice(id: number): Observable<any> {
+    // Assuming your .NET backend expects a PUT or POST to /api/devices/{id}/assign
+    return this.http.post(`${this.apiUrl}/${id}/assign`, {}, this.httpOptions);
+  }
+
+  unassignDevice(id: number): Observable<any> {
+    // Assuming your .NET backend expects a PUT or POST to /api/devices/{id}/unassign
+    return this.http.post(
+      `${this.apiUrl}/${id}/unassign`,
+      {},
+      this.httpOptions,
+    );
+  }
+
+  // Get devices assigned to the current logged-in user
+  getMyDevices(): Observable<Device[]> {
+    return this.http.get<Device[]>(
+      `${this.apiUrl}/my-devices`,
+      this.httpOptions,
+    );
+  }
+}
+</file>
+
 <file path="backend/DeviceManager.Api/Controllers/DevicesController.cs">
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-using DeviceManager.Api.Models;
+using DeviceManager.Api.DTOs;
 using DeviceManager.Api.Services;
 
 namespace DeviceManager.Api.Controllers;
@@ -6572,182 +7106,39 @@ public class DevicesController : ControllerBase
     {
         return await _deviceService.DeleteDeviceAsync(id) ? NoContent() : NotFound();
     }
-}
-</file>
 
-<file path="backend/DeviceManager.Api/Data/AppDbContext.cs">
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore; 
-using Microsoft.EntityFrameworkCore;
-using DeviceManager.Api.Models;
-
-namespace DeviceManager.Api.Data;
-
-public class AppDbContext : IdentityDbContext<ApplicationUser>
-{
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+    [HttpGet("check-serial")]
+    public async Task<IActionResult> CheckSerialExists([FromQuery] string sn)
     {
+        if (string.IsNullOrWhiteSpace(sn))
+            return BadRequest(new { message = "Serial number is required" });
+
+        var exists = await _deviceService.CheckSerialNumberExistsAsync(sn);
+        return Ok(exists);
     }
-
-   
-    public DbSet<Device> Devices { get; set; }
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        // CRITICAL: This base call configures all the security tables (AspNetUsers, etc.)
-        // It MUST stay right here before your custom configurations.
-        base.OnModelCreating(modelBuilder);
-
-        // Your existing custom mappings stay exactly as they were!
-        modelBuilder.Entity<Device>(entity =>
-        {
-            entity.ToTable("Devices");
-            entity.Property(e => e.OperatingSystem).HasColumnName("OperatingSystem");
-            entity.Property(e => e.OsVersion).HasColumnName("OSversion");
-            entity.Property(e => e.RamAmount).HasColumnName("RAMamount");
-        });
-    }
-}
-</file>
-
-<file path="backend/DeviceManager.Api/Models/Device.cs">
-namespace DeviceManager.Api.Models;
-
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-
-[Index(nameof(SerialNumber), IsUnique = true)] // Database-level uniqueness
-public class Device
-{
-  [Key]
-  public int Id { get; set; }
-
-  [Required]
-  public string SerialNumber { get; set; } = string.Empty;
-  public string Name { get; set; } = string.Empty;
-
-  public string Manufacturer { get; set; } = string.Empty;
-
-  //only phone or tablet
-  public string Type { get; set; } = string.Empty;
-
-  public string OperatingSystem { get; set; } = string.Empty;
-
-  public string OsVersion { get; set; } = string.Empty;
-
-  public string Processor { get; set; } = string.Empty;
-
-  public string RamAmount { get; set; } = string.Empty;
-
-  public string Description { get; set; } = string.Empty;
-
-  public string Status { get; set; } = "Available";
-
-  public DateTime DateAdded { get; set; } = DateTime.UtcNow;
-
-public string? AssignedUserId { get; set; }
-
-[ForeignKey("AssignedUserId")]
-public virtual ApplicationUser? AssignedUser { get; set; } // Must have 'virtual'!
-}
-</file>
-
-<file path="frontend/src/app/services/device.service.ts">
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { Device } from '../models/device.model';
-
-@Injectable({
-  providedIn: 'root',
-})
-export class DeviceService {
-  // Pointing directly to your Devices controller
-  private apiUrl = 'http://localhost:5246/api/devices';
-
-  // CRITICAL: This tells Angular to send the secure Admin/User cookies with EVERY request
-  private httpOptions = {
-    withCredentials: true,
-  };
-
-  constructor(private http: HttpClient) {}
-
-  // Get all devices
-  getDevices(): Observable<Device[]> {
-    return this.http.get<Device[]>(this.apiUrl, this.httpOptions);
-  }
-
-  getDeviceById(id: number): Observable<Device> {
-    return this.http.get<Device>(`${this.apiUrl}/${id}`, this.httpOptions);
-  }
-
-  deleteDevice(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`, this.httpOptions);
-  }
-
-  createDevice(device: any): Observable<Device> {
-    return this.http.post<Device>(this.apiUrl, device, this.httpOptions);
-  }
-
-  updateDevice(id: number, device: any) {
-    return this.http.put(`${this.apiUrl}/${id}`, device, this.httpOptions);
-  }
-
-  checkSerialNumberExists(serialNumber: string): Observable<boolean> {
-    return this.http.get<boolean>(
-      `${this.apiUrl}/check-serial?sn=${serialNumber}`,
-      this.httpOptions,
-    );
-  }
-
-  // ==========================================
-  // NEW ASSIGNMENT METHODS
-  // ==========================================
-
-  assignDevice(id: number): Observable<any> {
-    // Assuming your .NET backend expects a PUT or POST to /api/devices/{id}/assign
-    return this.http.post(`${this.apiUrl}/${id}/assign`, {}, this.httpOptions);
-  }
-
-  unassignDevice(id: number): Observable<any> {
-    // Assuming your .NET backend expects a PUT or POST to /api/devices/{id}/unassign
-    return this.http.post(
-      `${this.apiUrl}/${id}/unassign`,
-      {},
-      this.httpOptions,
-    );
-  }
 }
 </file>
 
 <file path="frontend/src/app/app.routes.ts">
 import { Routes } from '@angular/router';
 
-// Your existing Device components
 import { DeviceListComponent } from './components/device-list/device-list.component';
 import { DeviceDetailComponent } from './components/device-detail/device-detail.component';
 import { DeviceCreateComponent } from './components/device-create/device-create.component';
 import { DeviceEditComponent } from './components/device-edit/device-edit.component';
-
-// The new Home component (make sure the path matches where you generated it)
 import { HomePageComponent } from './components/home-page/home-page.component';
 import { RegisterComponent } from './components/register/register.component';
 import { LoginComponent } from './components/login/login.component';
 import { authGuard } from './guards/auth-guard';
-
-// We will create these next!
-// import { LoginComponent } from './components/login/login.component';
-// import { RegisterComponent } from './components/register/register.component';
+import { ProfileComponent } from './components/profile-page/profile-page.component';
 
 export const routes: Routes = [
-  // 1. THE FRONT DOOR: Show the Home Page by default
+  // Public routes
   { path: '', component: HomePageComponent },
+  { path: 'login', component: LoginComponent }, // ← No guard
+  { path: 'register', component: RegisterComponent }, // ← No guard
 
-  // 2. AUTH ROUTES (Uncomment these once we generate the components)
-  // { path: 'login', component: LoginComponent },
-  // { path: 'register', component: RegisterComponent },
-
-  // 3. THE SECURE ZONE: Move the device list to '/devices'
+  // Protected routes
   { path: 'devices', component: DeviceListComponent, canActivate: [authGuard] },
   {
     path: 'devices/new',
@@ -6764,10 +7155,14 @@ export const routes: Routes = [
     component: DeviceEditComponent,
     canActivate: [authGuard],
   },
-  { path: 'register', component: RegisterComponent, canActivate: [authGuard] },
-  { path: 'login', component: LoginComponent, canActivate: [authGuard] },
 
-  // 4. THE CATCH-ALL: If a user types a weird URL, send them back to Home
+  {
+    path: 'profile',
+    component: ProfileComponent,
+    canActivate: [authGuard],
+  },
+
+  // Catch-all
   { path: '**', redirectTo: '' },
 ];
 </file>
@@ -6782,27 +7177,25 @@ using DeviceManager.Api.Data;
 using DeviceManager.Api.Models;
 using DeviceManager.Api.Services;
 using System.Text.Json.Serialization;
-
-
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. CORE SERVICES ---
+// --- Core Services ---
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // This stops the "Null" issue caused by circular references
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-        options.JsonSerializerOptions.WriteIndented = true; 
+        options.JsonSerializerOptions.WriteIndented = true;
     });
+
 builder.Services.AddHttpClient();
 
-builder.Services.AddScoped<AiServiceInterface, AiService>();
-// --- 2. DATABASE & IDENTITY ---
+// --- Database & Identity ---
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Configure Identity to use our ApplicationUser
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     options.Password.RequireDigit = true;
@@ -6813,9 +7206,9 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
-// --- 3. AUTHENTICATION & JWT ---
+// --- JWT + Cookie Authentication ---
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var key = Encoding.UTF8.GetBytes(jwtSettings["Key"] ?? "Your_Super_Secret_Fallback_Key_32_Chars");
+var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]!);
 
 builder.Services.AddAuthentication(options =>
 {
@@ -6835,62 +7228,70 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(key)
     };
 
+    // Read JWT from HttpOnly cookie
     options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
         {
-            OnMessageReceived = context =>
+            if (context.Request.Cookies.ContainsKey("AccessToken"))
             {
-                if (context.Request.Cookies.ContainsKey("AccessToken"))
-                {
-                    context.Token = context.Request.Cookies["AccessToken"];
-                }
-                return Task.CompletedTask;
+                context.Token = context.Request.Cookies["AccessToken"];
             }
-        };
+            return Task.CompletedTask;
+        }
+    };
 });
 
-// --- 4. CORS & DEPENDENCY INJECTION ---
+// CORS (important for Angular)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularApp", policy =>
     {
-        policy.WithOrigins("http://localhost:4200") // Must be the exact Angular URL!
+        policy.WithOrigins("http://localhost:4200")
               .AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowCredentials(); // <--- CRITICAL FOR COOKIES
+              .AllowCredentials();
     });
 });
 
-// Register your services
+// Services
+builder.Services.AddScoped<AiServiceInterface, AiService>();
 builder.Services.AddScoped<DeviceServiceInterface, DeviceService>();
-// builder.Services.AddScoped<IAuthService, AuthService>(); // Add this once you create AuthService
-// Inside the Dependency Injection section
-builder.Services.AddScoped<AuthServiceInterface,AuthService>();
+builder.Services.AddScoped<AuthServiceInterface, AuthService>();
 
 var app = builder.Build();
 
-
 app.UseCors("AllowAngularApp");
 
-// CRITICAL: Authentication MUST come before Authorization
-app.UseAuthentication(); 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-// --- ADMIN SEEDER SCRIPT ---
+// Seed roles + admin user
+// === Role & Admin Seeding (Clean & Single Block) ===
+// === Role & Admin Seeding - Clean & Safe Version ===
+// === Role & Admin Seeding - Clean & Configurable ===
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
-    // 1. Create the Admin Role if it doesn't exist
-    if (!await roleManager.RoleExistsAsync("Admin"))
+    // Seed basic roles
+    string[] roles = { "Admin", "User" };
+    foreach (var role in roles)
     {
-        await roleManager.CreateAsync(new IdentityRole("Admin"));
+        if (!await roleManager.RoleExistsAsync(role))
+        {
+            await roleManager.CreateAsync(new IdentityRole(role));
+        }
     }
 
-    // 2. Create the First Admin User if they don't exist
-    var adminEmail = "admin@devicemanager.com";
+    // Seed default Admin user from configuration
+    var adminEmail = config["AdminSettings:Email"] ?? "admin@devicemanager.com";
+    var adminPassword = config["AdminSettings:Password"] ?? "SuperSecretAdmin123!";
+
     var adminUser = await userManager.FindByEmailAsync(adminEmail);
 
     if (adminUser == null)
@@ -6904,29 +7305,53 @@ using (var scope = app.Services.CreateScope())
             EmailConfirmed = true
         };
 
-        var result = await userManager.CreateAsync(adminUser, "SuperSecretAdmin123!");
-        
+        var result = await userManager.CreateAsync(adminUser, adminPassword);
         if (result.Succeeded)
         {
-            // 3. Attach the Admin role to this user
             await userManager.AddToRoleAsync(adminUser, "Admin");
+            Console.WriteLine($"✅ Default Admin user created: {adminEmail}");
         }
     }
-}
-
-using (var scope = app.Services.CreateScope())
-{
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    var roles = new[] { "Admin", "User" };
-
-    foreach (var role in roles)
+    else
     {
-        if (!await roleManager.RoleExistsAsync(role))
-        {
-            await roleManager.CreateAsync(new IdentityRole(role));
-        }
+        Console.WriteLine($"ℹ️  Admin user already exists: {adminEmail}");
     }
 }
+// === Global Exception Handler (Clean & Professional) ===
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/json";
+
+        var error = new
+        {
+            message = "An unexpected error occurred.",
+            statusCode = context.Response.StatusCode
+        };
+
+        // In Development, show more details (helpful for debugging)
+        if (context.RequestServices.GetRequiredService<IWebHostEnvironment>().IsDevelopment())
+        {
+            var exceptionHandlerPathFeature = 
+                context.Features.Get<IExceptionHandlerPathFeature>();
+
+            var ex = exceptionHandlerPathFeature?.Error;
+
+            await context.Response.WriteAsJsonAsync(new
+            {
+                message = ex?.Message ?? "Internal Server Error",
+                details = ex?.StackTrace,
+                statusCode = context.Response.StatusCode
+            });
+        }
+        else
+        {
+            await context.Response.WriteAsJsonAsync(error);
+        }
+    });
+});
 
 app.Run();
 

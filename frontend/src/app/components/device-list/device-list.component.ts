@@ -4,11 +4,11 @@ import { DeviceService } from '../../services/device.service';
 import { Device } from '../../models/device.model';
 import { RouterLink, RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service'; // 1. Import the Auth Service
-
+import { FormsModule } from '@angular/forms';
 @Component({
   selector: 'app-device-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterModule],
+  imports: [CommonModule, RouterLink, RouterModule, FormsModule],
   templateUrl: './device-list.component.html',
   styleUrl: './device-list.component.scss',
 })
@@ -92,6 +92,20 @@ export class DeviceListComponent implements OnInit {
         console.error('Unassign failed:', err);
         alert('Could not unassign the device.');
       },
+    });
+  }
+
+  searchQuery: string = '';
+
+  searchDevices(): void {
+    if (!this.searchQuery.trim()) {
+      this.loadDevices(); // reset to full list
+      return;
+    }
+
+    this.deviceService.searchDevices(this.searchQuery).subscribe({
+      next: (data) => (this.devices = data),
+      error: (err) => console.error('Search failed:', err),
     });
   }
 }

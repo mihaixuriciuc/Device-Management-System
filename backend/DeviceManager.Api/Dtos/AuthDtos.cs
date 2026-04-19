@@ -29,4 +29,10 @@ public record LoginDto(
     string Password
 );
 
-public record AuthResponseDto(bool IsSuccess, string? Message, string? Role );
+public record AuthResponseDto(
+    bool IsSuccess, 
+    string? Message, 
+    string? Role,
+    string? FirstName,   // ← Add this
+    string? LastName     // ← Add this
+);

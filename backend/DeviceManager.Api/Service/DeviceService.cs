@@ -133,4 +133,62 @@ public class DeviceService : DeviceServiceInterface
         device.Status = "Available";
         await _context.SaveChangesAsync();
     }
+
+    public async Task<IEnumerable<Device>> SearchDevicesAsync(string query)
+{
+    if (string.IsNullOrWhiteSpace(query))
+        return await GetAllDevicesAsync(); // return all if empty search
+
+    var normalizedQuery = query.Trim().ToUpper();
+
+    // Split into tokens for better matching (e.g. "iphone 16 pro" → ["IPHONE", "16", "PRO"])
+    var tokens = normalizedQuery.Split([' ', ',', ';', '-'], StringSplitOptions.RemoveEmptyEntries)
+                                .Where(t => t.Length > 1)
+                                .ToList();
+
+    if (tokens.Count == 0)
+        return await GetAllDevicesAsync();
+
+    var devices = await _context.Devices
+        .Include(d => d.AssignedUser)
+        .ToListAsync(); // Load once (small dataset for this project)
+
+    var scoredDevices = devices.Select(device =>
+    {
+        int score = 0;
+
+        var nameUpper = device.Name?.ToUpper() ?? "";
+        var manufUpper = device.Manufacturer?.ToUpper() ?? "";
+        var procUpper = device.Processor?.ToUpper() ?? "";
+        var ramUpper = device.RamAmount?.ToUpper() ?? "";
+
+        foreach (var token in tokens)
+        {
+            // Strongest match: Name (highest priority)
+            if (nameUpper.Contains(token))
+                score += 100;
+
+            // Good match: Manufacturer
+            if (manufUpper.Contains(token))
+                score += 50;
+
+            // Medium: Processor
+            if (procUpper.Contains(token))
+                score += 30;
+
+            // Lowest: RAM (e.g. searching "16" should still find 16GB)
+            if (ramUpper.Contains(token))
+                score += 10;
+        }
+
+        return new { Device = device, Score = score };
+    })
+    .Where(x => x.Score > 0)                    // only return matches
+    .OrderByDescending(x => x.Score)            // relevance ranking
+    .ThenBy(x => x.Device.Name)                 // stable sort
+    .Select(x => x.Device)
+    .ToList();
+
+    return scoredDevices;
+}
 }

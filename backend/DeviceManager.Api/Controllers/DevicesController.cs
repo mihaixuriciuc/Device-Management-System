@@ -103,4 +103,12 @@ public class DevicesController : ControllerBase
         var exists = await _deviceService.CheckSerialNumberExistsAsync(sn);
         return Ok(exists);
     }
+
+    [HttpGet("search")]
+    [AllowAnonymous] // or keep [Authorize] if you prefer
+    public async Task<IActionResult> Search([FromQuery] string q)
+    {
+        var results = await _deviceService.SearchDevicesAsync(q);
+        return Ok(results);
+    }
 }

@@ -1,0 +1,54 @@
+<div class="profile-container">
+  <div class="header-actions">
+    <button class="back-link" routerLink="/devices">← Back to Devices</button>
+  </div>
+
+  <div class="profile-card">
+    <h2>My Profile</h2>
+
+    <div class="user-info">
+      <p>
+        <strong>Full Name:</strong> {{ currentUser?.firstName }}
+        {{ currentUser?.lastName }}
+      </p>
+      <p><strong>Role:</strong> {{ currentUser?.role || "User" }}</p>
+    </div>
+
+    <h3>My Assigned Devices ({{ assignedDevices.length }})</h3>
+
+    <div *ngIf="isLoading" class="loading">Loading your devices...</div>
+
+    <div *ngIf="!isLoading && assignedDevices.length === 0" class="no-devices">
+      You don't have any devices assigned yet.
+    </div>
+
+    <table *ngIf="assignedDevices.length > 0" class="devices-table">
+      <thead>
+        <tr>
+          <th>Device Name</th>
+          <th>Manufacturer</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let device of assignedDevices">
+          <td>{{ device.name }}</td>
+          <td>{{ device.manufacturer }}</td>
+          <td>
+            <span class="status-pill" [attr.data-status]="device.status">
+              {{ device.status }}
+            </span>
+          </td>
+          <td>
+            <button class="unassign-btn" (click)="unassignDevice(device.id)">
+              Unassign
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <button class="logout-btn" (click)="logout()">Logout</button>
+</div>

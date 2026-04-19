@@ -7,6 +7,8 @@ using DeviceManager.Api.Data;
 using DeviceManager.Api.Models;
 using DeviceManager.Api.Services;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -97,23 +99,34 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Seed roles + admin user
+// === Role & Admin Seeding (Clean & Single Block) ===
+// === Role & Admin Seeding - Clean & Safe Version ===
+// === Role & Admin Seeding - Clean & Configurable ===
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
+    // Seed basic roles
     string[] roles = { "Admin", "User" };
     foreach (var role in roles)
     {
         if (!await roleManager.RoleExistsAsync(role))
+        {
             await roleManager.CreateAsync(new IdentityRole(role));
+        }
     }
 
-    // Seed admin
-    var adminEmail = "admin@devicemanager.com";
-    if (await userManager.FindByEmailAsync(adminEmail) == null)
+    // Seed default Admin user from configuration
+    var adminEmail = config["AdminSettings:Email"] ?? "admin@devicemanager.com";
+    var adminPassword = config["AdminSettings:Password"] ?? "SuperSecretAdmin123!";
+
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+
+    if (adminUser == null)
     {
-        var admin = new ApplicationUser
+        adminUser = new ApplicationUser
         {
             UserName = adminEmail,
             Email = adminEmail,
@@ -122,11 +135,53 @@ using (var scope = app.Services.CreateScope())
             EmailConfirmed = true
         };
 
-        var result = await userManager.CreateAsync(admin, "SuperSecretAdmin123!");
+        var result = await userManager.CreateAsync(adminUser, adminPassword);
         if (result.Succeeded)
-            await userManager.AddToRoleAsync(admin, "Admin");
+        {
+            await userManager.AddToRoleAsync(adminUser, "Admin");
+            Console.WriteLine($"✅ Default Admin user created: {adminEmail}");
+        }
+    }
+    else
+    {
+        Console.WriteLine($"ℹ️  Admin user already exists: {adminEmail}");
     }
 }
+// === Global Exception Handler (Clean & Professional) ===
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/json";
+
+        var error = new
+        {
+            message = "An unexpected error occurred.",
+            statusCode = context.Response.StatusCode
+        };
+
+        // In Development, show more details (helpful for debugging)
+        if (context.RequestServices.GetRequiredService<IWebHostEnvironment>().IsDevelopment())
+        {
+            var exceptionHandlerPathFeature = 
+                context.Features.Get<IExceptionHandlerPathFeature>();
+
+            var ex = exceptionHandlerPathFeature?.Error;
+
+            await context.Response.WriteAsJsonAsync(new
+            {
+                message = ex?.Message ?? "Internal Server Error",
+                details = ex?.StackTrace,
+                statusCode = context.Response.StatusCode
+            });
+        }
+        else
+        {
+            await context.Response.WriteAsJsonAsync(error);
+        }
+    });
+});
 
 app.Run();
 

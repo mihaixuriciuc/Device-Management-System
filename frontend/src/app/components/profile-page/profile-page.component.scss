@@ -1,0 +1,156 @@
+.profile-container {
+  padding: 40px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.header-actions {
+  margin-bottom: 20px;
+
+  .back-link {
+    background: none;
+    border: none;
+    color: #4a5568;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    text-decoration: none;
+    padding: 0;
+
+    &:hover {
+      color: #3182ce;
+    }
+  }
+}
+
+.profile-card {
+  background: white;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+  margin-bottom: 30px;
+
+  h2 {
+    margin: 0 0 20px 0;
+    color: #1a202c;
+    font-size: 2rem;
+  }
+
+  .user-info {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #edf2f7;
+
+    p {
+      margin: 8px 0;
+      font-size: 1.05rem;
+      color: #2d3748;
+
+      strong {
+        color: #4a5568;
+        width: 100px;
+        display: inline-block;
+      }
+    }
+  }
+
+  h3 {
+    margin: 0 0 15px 0;
+    color: #2d3748;
+    font-size: 1.3rem;
+  }
+}
+
+.loading,
+.no-devices {
+  text-align: center;
+  padding: 40px;
+  color: #718096;
+  font-style: italic;
+}
+
+.devices-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+
+  th {
+    background-color: #f8f9fa;
+    padding: 14px 16px;
+    text-align: left;
+    color: #718096;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+  }
+
+  td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #edf2f7;
+    color: #2d3748;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+.status-pill {
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+
+  &[data-status="Available"] {
+    background-color: #c6f6d5;
+    color: #22543d;
+  }
+  &[data-status="In Use"] {
+    background-color: #ebf8ff;
+    color: #2b6cb0;
+  }
+  &[data-status="In Service"] {
+    background-color: #feebc8;
+    color: #744210;
+  }
+  &[data-status="Unavailable"] {
+    background-color: #fed7d7;
+    color: #822727;
+  }
+}
+
+.unassign-btn {
+  padding: 6px 14px;
+  background-color: #fed7d7;
+  color: #c53030;
+  border: 1px solid #feb2b2;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #c53030;
+    color: white;
+  }
+}
+
+.logout-btn {
+  padding: 12px 28px;
+  background-color: #e53e3e;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 20px;
+
+  &:hover {
+    background-color: #c53030;
+    transform: translateY(-1px);
+  }
+}

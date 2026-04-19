@@ -2,10 +2,11 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Device } from '../models/device.model';
 import { Observable } from 'rxjs';
+import { API_CONFIG } from '../config/api.config';
 
 @Injectable({ providedIn: 'root' })
 export class AiService {
-  private apiUrl = 'http://localhost:5246/api/ai'; // Match your API port!
+  private apiUrl = `${API_CONFIG.baseUrl}/ai`;
 
   constructor(private http: HttpClient) {}
 

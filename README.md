@@ -16,7 +16,7 @@ A full-stack device inventory management system built with Angular 21 (Frontend)
 
 ## How to Run Locally
 
-### 1. Clone the Repository
+### 1. Clone the Repository(make sure you have git installed)
 
     git clone https://github.com/mihaixuriciuc/Device-Management-System.git
     cd Device-Management-System
@@ -36,6 +36,8 @@ These scripts will automatically:
 
 - Restore all .NET backend packages
 - Install all Angular frontend dependencies (npm install)
+
+Make sure the Angular and .NET are correctly installed
 
 ### 3. Configure the Application
 
@@ -60,10 +62,43 @@ Open backend/DeviceManager.Api/appsettings.json and replace the placeholders:
     }
 
 Create and seed the database:
-Open SQL Server Management Studio (SSMS) or Azure Data Studio and run the scripts in this exact order:
+For this step to work, we need to do the following:
 
-1. DBScripts/CreateDatabase.sql → Creates the DeviceDb database
-2. DBScripts/SeedData.sql → Inserts 15 sample devices
+1. Download Docker from: https://docs.docker.com/get-started/get-docker/
+2. Use SQL Server(mssql) extension in VSCode
+3. Open Docker Desktop (the whale icon).
+4. Wait until it says “Docker Desktop is running” (green light).
+5. Open PowerShell (recommended) or Command Prompt as Administrator and copy-paste this command:
+
+```
+docker run -e "ACCEPT_EULA=Y" `
+           -e "MSSQL_SA_PASSWORD=YOUR_SQL_SA_PASSWORD" `
+           -p 1433:1433 `
+           --name DeviceDb `
+           -d mcr.microsoft.com/mssql/server:2022-latest
+
+```
+
+6. Use this command to remive migrations
+
+```
+dotnet ef database drop --force
+```
+
+7. Generate from models Migrations
+
+```
+dotnet ef migrations add InitialSetup
+```
+
+8. Aplly migrations
+
+```
+dotnet ef database update
+```
+
+. DBScripts/CreateDatabase.sql → Creates the DeviceDb database
+. DBScripts/SeedData.sql → Inserts 15 sample devices
 
 ### 4. Start the Application
 

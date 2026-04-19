@@ -25,7 +25,6 @@ export class DeviceCreateComponent {
   deviceForm = new FormGroup({
     name: new FormControl('', [Validators.required]),
 
-    // Serial Number mapped with explicit validators
     serialNumber: new FormControl('', {
       validators: [Validators.required],
       asyncValidators: [this.uniqueSerialValidator()],
@@ -51,61 +50,54 @@ export class DeviceCreateComponent {
   ) {}
 
   onSubmit() {
-    // Extra safety check: Don't submit if it's pending a server response
-    if (this.deviceForm.valid && !this.deviceForm.pending) {
-      const rawData = this.deviceForm.value;
-
-      let ramValue = rawData.ramAmount?.toString().trim() || '';
-      const numericPart = ramValue.match(/\d+/);
-      if (numericPart) {
-        ramValue = `${numericPart[0]}GB`;
-      }
-
-      const deviceToSave = {
-        ...rawData,
-        ramAmount: ramValue,
-      };
-
-      this.deviceService.createDevice(deviceToSave).subscribe({
-        next: () => {
-          alert('Device Created Successfully!');
-          this.router.navigate(['/']);
-        },
-        error: (err) => {
-          alert('Failed to save. Check console.');
-          console.error('Error detail:', err);
-        },
-      });
+    if (this.deviceForm.invalid || this.deviceForm.pending) {
+      return;
     }
+
+    const raw = this.deviceForm.value;
+
+    // Fix RAM format for backend
+    let ramValue = (raw.ramAmount || '').toString().trim();
+    const match = ramValue.match(/\d+/);
+    if (match) {
+      ramValue = match[0] + 'GB';
+    }
+
+    const payload = {
+      ...raw,
+      ramAmount: ramValue,
+    };
+
+    this.deviceService.createDevice(payload).subscribe({
+      next: () => {
+        alert('Device created successfully!');
+        this.router.navigate(['/devices']);
+      },
+      error: (err) => {
+        console.error('Create failed:', err);
+        if (err.status === 400 || err.status === 409) {
+          alert(
+            'Bad Request: ' +
+              (err.error?.message ||
+                'Check all fields (especially Serial Number)'),
+          );
+        } else {
+          alert('Failed to create device. Is the server running?');
+        }
+      },
+    });
   }
 
-  // ==========================================
-  // Custom Async Validator
-  // ==========================================
   uniqueSerialValidator(): AsyncValidatorFn {
     return (control: AbstractControl): Observable<ValidationErrors | null> => {
-      if (!control.value) {
-        return of(null);
-      }
+      if (!control.value) return of(null);
 
       return timer(300).pipe(
         switchMap(() =>
           this.deviceService.checkSerialNumberExists(control.value),
         ),
-        map((exists) => {
-          console.log(`Backend check for ${control.value}: Exists =`, exists);
-          // Return the error state if it exists
-          return exists ? { serialTaken: true } : null;
-        }),
-        catchError((err) => {
-          console.error(
-            'API validation failed (probably CORS or Server Offline):',
-            err,
-          );
-          // CRITICAL FIX: If the API fails, return an error so the form becomes INVALID
-          // and locks the submit button, instead of assuming it's fine.
-          return of({ apiError: true });
-        }),
+        map((exists) => (exists ? { serialTaken: true } : null)),
+        catchError(() => of({ apiError: true })),
       );
     };
   }

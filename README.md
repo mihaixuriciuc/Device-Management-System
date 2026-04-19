@@ -16,7 +16,7 @@ A full-stack device inventory management system built with Angular 21 (Frontend)
 
 ## How to Run Locally
 
-### 1. Clone the Repository
+### 1. Clone the Repository(make sure you have git installed)
 
     git clone https://github.com/mihaixuriciuc/Device-Management-System.git
     cd Device-Management-System
@@ -83,6 +83,18 @@ docker run -e "ACCEPT_EULA=Y" `
 
 ```
 dotnet ef database drop --force
+```
+
+7. Generate from models Migrations
+
+```
+dotnet ef migrations add InitialSetup
+```
+
+8. Aplly migrations
+
+```
+dotnet ef database update
 ```
 
 . DBScripts/CreateDatabase.sql → Creates the DeviceDb database

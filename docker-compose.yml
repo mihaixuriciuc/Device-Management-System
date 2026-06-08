@@ -1,0 +1,68 @@
+# Place this file at the repo root: docker-compose.yml
+# Run with: docker compose up --build
+# Stop with: docker compose down   (add -v to also delete the DB volume)
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: device-db
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "${DB_PASSWORD:-YourStrong!Passw0rd}"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql
+    networks:
+      - device-net
+    healthcheck:
+      # Container is "healthy" only once SQL Server actually accepts connections.
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -No -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/DeviceManager.Api/Dockerfile
+    container_name: device-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      # Double underscore = nested config key in ASP.NET Core.
+      # This overrides ConnectionStrings:DefaultConnection from appsettings.json.
+      ConnectionStrings__DefaultConnection: "Server=db,1433;Database=DeviceDb;User Id=sa;Password=${DB_PASSWORD:-YourStrong!Passw0rd};TrustServerCertificate=True;"
+      Jwt__Key: "${JWT_KEY:-please_change_me_to_a_long_random_string_at_least_32_chars}"
+      Jwt__Issuer: "DeviceManager.Api"
+      Jwt__Audience: "DeviceManager.Angular"
+      Gemini__ApiKey: "${GEMINI_API_KEY:-}"
+      AdminSettings__Email: "${ADMIN_EMAIL:-admin@devicemanager.com}"
+      AdminSettings__Password: "${ADMIN_PASSWORD:-SuperSecretAdmin123!}"
+    ports:
+      - "5246:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - device-net
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: device-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - api
+    networks:
+      - device-net
+
+volumes:
+  mssql-data:
+
+networks:
+  device-net:
+    driver: bridge

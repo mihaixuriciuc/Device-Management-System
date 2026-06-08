@@ -21,3 +21,5 @@ Thumbs.db
 
 # --- Secrets (CRITICAL) ---
 appsettings.Development.json
+env.example
+docker-compose.yml

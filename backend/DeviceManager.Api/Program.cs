@@ -103,7 +103,12 @@ app.MapControllers();
 // === Role & Admin Seeding - Clean & Safe Version ===
 // === Role & Admin Seeding - Clean & Configurable ===
 using (var scope = app.Services.CreateScope())
+
 {
+
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
     var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();

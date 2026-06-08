@@ -1,0 +1,9 @@
+# Place this file at: backend/DeviceManager.Api/.dockerignore
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.vscode/
+.idea/
+appsettings.Development.json
